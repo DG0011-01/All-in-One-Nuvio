@@ -17,6 +17,8 @@ jobs:
 
       - name: Sync with upstream
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/D3adlyRocket/All-in-One-Nuvio.git
           git fetch upstream
           git merge upstream/main --allow-unrelated-histories -X theirs
@@ -113,8 +115,6 @@ jobs:
 
       - name: Commit & push
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --staged --quiet || git commit -m "Auto-sync: removed playimdb, restored cinezo, tagged DG0011"
           git push
