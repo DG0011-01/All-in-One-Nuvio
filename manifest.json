@@ -559,12 +559,19 @@
       "description": "Cascading multi-proxy decryption stream provider.",
       "version": "1.0.0",
       "author": "dustincos",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/lordflix.js",
       "enabled": true,
-      "formats": ["m3u8"],
+      "formats": [
+        "m3u8"
+      ],
       "logo": "https://i.postimg.cc/vZgHT15q/lordflix.png",
-      "contentLanguage": ["en"],
+      "contentLanguage": [
+        "en"
+      ],
       "limited": false
     },
     {
@@ -991,12 +998,20 @@
       "description": "Multi-core cloud relay resolving and decoding system.",
       "version": "1.0.0",
       "author": "Dustincos",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/vidsync.js",
       "enabled": true,
-      "formats": ["mp4", "m3u8"],
+      "formats": [
+        "mp4",
+        "m3u8"
+      ],
       "logo": "https://i.postimg.cc/Z5F3ndTL/vidsync.png",
-      "contentLanguage": ["en"]
+      "contentLanguage": [
+        "en"
+      ]
     },
     {
       "id": "onlykdrama",
