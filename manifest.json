@@ -8,12 +8,22 @@
       "description": "AllAnime - Anime and Manga content streaming",
       "version": "1.0.0",
       "author": "",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/allanime.js",
       "enabled": true,
-      "formats": ["mp4", "mkv", "m3u8"],
+      "formats": [
+        "mp4",
+        "mkv",
+        "m3u8"
+      ],
       "logo": "https://i.postimg.cc/DwpqLJWV/allanime.png",
-      "contentLanguage": ["en", "ja"]
+      "contentLanguage": [
+        "en",
+        "ja"
+      ]
     },
     {
       "id": "4khdhub",
@@ -36,13 +46,16 @@
         "en"
       ]
     },
-    { 
+    {
       "id": "4khdhubnew",
       "name": "4KHDHub-NEW",
       "description": "4KHDHub- Now fetches every movie and series",
       "version": "2.0.0",
       "author": "Xyr0nX",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/4khdhubnew.js",
       "enabled": true,
       "formats": [
@@ -393,7 +406,10 @@
       "description": "1080p multilingual streams",
       "version": "1.0.0",
       "author": "Dustincos",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/netmirrornew.js",
       "enabled": true,
       "formats": [
