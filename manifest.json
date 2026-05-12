@@ -12,7 +12,7 @@
       "filename": "providers/allanime.js",
       "enabled": true,
       "formats": ["mp4", "mkv", "m3u8"],
-      "logo": "",
+      "logo": "https://i.postimg.cc/DwpqLJWV/allanime.png",
       "contentLanguage": ["en", "ja"]
     },
     { 
