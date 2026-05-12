@@ -3,27 +3,17 @@
   "version": "1.0.0",
   "scrapers": [
     {
-      "id": "hianime",
-      "name": "HiAnime",
-      "description": "HiAnime - Anime and Asian content streaming",
-      "version": "2.0.0",
-      "author": "JK",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "src/providers/hianime.js",
+      "id": "allanime",
+      "name": "AllAnime",
+      "description": "AllAnime - Anime and Manga content streaming",
+      "version": "1.0.0",
+      "author": "",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/allanime.js",
       "enabled": true,
-      "formats": [
-        "mp4",
-        "mkv",
-        "m3u8"
-      ],
-      "logo": "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/Icons/hianime.png",
-      "contentLanguage": [
-        "en",
-        "hi"
-      ]
+      "formats": ["mp4", "mkv", "m3u8"],
+      "logo": "https://i.postimg.cc/DwpqLJWV/allanime.png",
+      "contentLanguage": ["en", "ja"]
     },
     {
       "id": "4khdhub",
@@ -46,17 +36,14 @@
         "en"
       ]
     },
-    {
-      "id": "4khdhubtest",
-      "name": "4KHDHub-Test",
-      "description": "4KHDHub TEST",
-      "version": "1.0.0",
-      "author": "Nuvio Team",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/4khdhubtest.js",
+    { 
+      "id": "4khdhubnew",
+      "name": "4KHDHub-NEW",
+      "description": "4KHDHub- Now fetches every movie and series",
+      "version": "2.0.0",
+      "author": "Xyr0nX",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/4khdhubnew.js",
       "enabled": true,
       "formats": [
         "mp4",
@@ -401,16 +388,13 @@
       ]
     },
     {
-      "id": "netmirrortest",
-      "name": "NetMirrorTest",
+      "id": "netmirrornew",
+      "name": "NetMirrorNew",
       "description": "1080p multilingual streams",
       "version": "1.0.0",
-      "author": "MultiSource",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/netmirrortest.js",
+      "author": "Dustincos",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/netmirrornew.js",
       "enabled": true,
       "formats": [
         "mp4",
