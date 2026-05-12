@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "scrapers": [
     {
-      "id": "hianime",
-      "name": "HiAnime",
-      "description": "HiAnime - Anime and Asian content streaming",
-      "version": "2.0.0",
-      "author": "JK",
+      "id": "allanime",
+      "name": "AllAnime",
+      "description": "AllAnime - Anime and Manga content streaming",
+      "version": "1.0.0",
+      "author": "",
       "supportedTypes": ["movie", "tv"],
-      "filename": "src/providers/hianime.js",
+      "filename": "providers/allanime.js",
       "enabled": true,
       "formats": ["mp4", "mkv", "m3u8"],
-      "logo": "https://raw.githubusercontent.com/phisher98/TVVVV/refs/heads/main/Icons/hianime.png",
-      "contentLanguage": ["en", "hi"]
+      "logo": "",
+      "contentLanguage": ["en", "ja"]
     },
     { 
       "id": "4khdhub",
