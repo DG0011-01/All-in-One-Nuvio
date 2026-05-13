@@ -913,12 +913,21 @@
       "description": "VegaMovies streaming with high-quality direct links (~6s)",
       "version": "1.0",
       "author": "raymondnoodles",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/vegamovies.js",
       "enabled": true,
-      "formats": ["mp4", "mkv"],
+      "formats": [
+        "mp4",
+        "mkv"
+      ],
       "logo": "https://i.postimg.cc/TwYK26jn/vegamovies.png",
-      "contentLanguage": ["en", "hi"]
+      "contentLanguage": [
+        "en",
+        "hi"
+      ]
     },
     {
       "id": "vidlink",
