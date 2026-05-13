@@ -281,7 +281,7 @@
       "id": "hindmoviez",
       "name": "HindMoviez",
       "description": "HindMoviez - Hindi & English Movies and Series (480p / 720p / 1080p / 4K)",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Sanchit (@S4NCHITT) — Murph's Streams",
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/hindmoviez.js",
