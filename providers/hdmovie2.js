@@ -3,7 +3,7 @@
 // Updated with .equipment domain and HLS stream fixes
 
 var TMDB_KEY = 'd80ba92bc7cefe3359668d30d06f3305'
-var BASE = 'https://hdmovie2.equipment' // Updated Domain 🌐
+var BASE = 'https://hdmovie2.com.se' // Updated Domain 🌐
 var CDN = 'https://hdm2.ink'
 var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36'
 
