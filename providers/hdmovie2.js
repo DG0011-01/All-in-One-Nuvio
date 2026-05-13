@@ -48,7 +48,7 @@ function searchSite(title, year) {
       while ((articleMatch = articleRegex.exec(html)) !== null) {
         var articleHtml = articleMatch[1]
         // Updated Regex to match .equipment domain 🛠️
-        var linkMatch = articleHtml.match(/href="(https:\/\/hdmovie2\.equipment\/movies\/([^"\/]+)\/)"/)
+        var linkMatch = articleHtml.match(/href="(https:\/\/hdmovie2\.com.se\/movies\/([^"\/]+)\/)"/)
         if (!linkMatch) continue
         if (linkMatch[1].includes('/feed/')) continue
         var altMatch = articleHtml.match(/alt="([^"]+)"/)
