@@ -448,6 +448,19 @@
       "contentLanguage": ["en"]
     },
     {
+      "id": "notorrent",
+      "name": "NoTorrent",
+      "description": "Non-P2P direct resolution proxy.",
+      "version": "1.0.0",
+      "author": "Dustincos",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/notorrent.js",
+      "enabled": true,
+      "formats": ["mp4", "m3u8"],
+      "logo": "https://i.postimg.cc/FsSpNcVP/notorrent.png",
+      "contentLanguage": ["en", "es"]
+    },
+    {
       "id": "playimdb",
       "name": "PlayIMDb (Movies)",
       "description": "High-Speed Direct Streaming for Movies (IMDb ID Extract)",
@@ -485,19 +498,6 @@
       "formats": ["mp4", "m3u8"],
       "logo": "https://i.postimg.cc/7L5shxmC/purstream.png",
       "contentLanguage": ["en", "fr"]
-    },
-    {
-      "id": "rgshows",
-      "name": "RGShows",
-      "description": "Discover and stream your favorite Movies, TV Shows & Anime.",
-      "version": "1.0.0",
-      "author": "P-Stream Team",
-      "supportedTypes": ["movie", "tv"],
-      "filename": "providers/rgshows.js",
-      "enabled": true,
-      "formats": ["mp4", "m3u8"],
-      "logo": "https://i.postimg.cc/kXNS9837/rgshows.png",
-      "contentLanguage": ["en"]
     },
     {
       "id": "showbox",
