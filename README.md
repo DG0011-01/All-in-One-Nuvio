@@ -85,6 +85,7 @@ A masive shoutout to all the developers who have created these plugins.
 - **Real-Morpheus**
 - **Xyr0nX/Antonio**
 - **Yatin-Code**
+- **RaymondNoodles**
 
 ---
 
