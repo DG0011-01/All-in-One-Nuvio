@@ -41,8 +41,8 @@ function getStreams(tmdbId, mediaType, seasonNum, episodeNum) {
 
       // Using the specific headers you identified as working
       var streamHeaders = {
-        "Referer": "https://www.rgshows.ru/",
-        "Origin": "https://www.rgshows.ru",
+        "Referer": "https://www.1tube.org/",
+        "Origin": "https://www.1tube.org/",
         "User-Agent": "Mozilla/5.0 (Linux; Android 15; ALT-NX1 Build/HONORALT-N31; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/146.0.7680.177 Mobile Safari/537.36",
         "sec-ch-ua": '"Chromium";v="146", "Not-A.Brand";v="24", "Android WebView";v="146"',
         "sec-ch-ua-mobile": "?1",
