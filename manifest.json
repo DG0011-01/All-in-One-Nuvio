@@ -1,5 +1,5 @@
 {
-  "name": "All-in-One-Nuvio",
+  "name": "D3adlyRocket [DG0011]",
   "version": "1.0.0",
   "scrapers": [
     {
@@ -604,12 +604,23 @@
       "description": "MovieBox - Hindi, Tamil, Telugu & English Movies/Series with multi-quality streams",
       "version": "1.0.0",
       "author": "Xyr0nX",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/movieboxtest.js",
       "enabled": true,
-      "formats": ["mp4", "m3u8"],
+      "formats": [
+        "mp4",
+        "m3u8"
+      ],
       "logo": "https://i.postimg.cc/TPwkfqHh/moviebox.png",
-      "contentLanguage": ["en", "hi", "ta", "te"]
+      "contentLanguage": [
+        "en",
+        "hi",
+        "ta",
+        "te"
+      ]
     },
     {
       "id": "movieblast",
@@ -764,7 +775,9 @@
         "m3u8"
       ],
       "logo": "https://i.postimg.cc/L64M3bYV/netmirror.png",
-      "contentLanguage": ["en"]
+      "contentLanguage": [
+        "en"
+      ]
     },
     {
       "id": "notorrent",
@@ -772,38 +785,21 @@
       "description": "Non-P2P direct resolution proxy.",
       "version": "1.0.0",
       "author": "Dustincos",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/notorrent.js",
       "enabled": true,
-      "formats": ["mp4", "m3u8"],
+      "formats": [
+        "mp4",
+        "m3u8"
+      ],
       "logo": "https://i.postimg.cc/FsSpNcVP/notorrent.png",
-      "contentLanguage": ["en", "es"]
-    },
-    {
-      "id": "playimdb",
-      "name": "PlayIMDb (Movies)",
-      "description": "High-Speed Direct Streaming for Movies (IMDb ID Extract)",
-      "version": "1.1.4",
-      "author": "Mukesh",
-      "supportedTypes": ["movie"],
-      "filename": "providers/playimdb.js",
-      "enabled": true,
-      "formats": ["mp4", "mkv", "m3u8"],
-      "logo": "https://i.postimg.cc/KzjPtYWY/imdb.png",
-      "contentLanguage": ["en", "hi"]
-    },
-    { 
-      "id": "playimdb_series",
-      "name": "PlayIMDb (Series)",
-      "description": "High-Speed Direct Streaming for TV Shows (StreamIMDb Extract)",
-      "version": "1.2.1",
-      "author": "Mukesh",
-      "supportedTypes": ["tv"],
-      "filename": "providers/playimdb_v2.js",
-      "enabled": true,
-      "formats": ["mp4", "mkv", "m3u8"],
-      "logo": "https://i.postimg.cc/KzjPtYWY/imdb.png",
-      "contentLanguage": ["en", "hi"]
+      "contentLanguage": [
+        "en",
+        "es"
+      ]
     },
     {
       "id": "purstream",
