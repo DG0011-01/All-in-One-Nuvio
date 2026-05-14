@@ -1,5 +1,5 @@
 {
-  "name": "D3adlyRocket [DG0011]",
+  "name": "All-in-One-Nuvio",
   "version": "1.0.0",
   "scrapers": [
     {
@@ -473,7 +473,7 @@
       "id": "hindmoviez",
       "name": "HindMoviez",
       "description": "HindMoviez - Hindi & English Movies and Series (480p / 720p / 1080p / 4K)",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Sanchit (@S4NCHITT) — Murph's Streams",
       "supportedTypes": [
         "movie",
@@ -597,6 +597,19 @@
         "ta",
         "te"
       ]
+    },
+    {
+      "id": "movieboxtest",
+      "name": "MovieBox-Test",
+      "description": "MovieBox - Hindi, Tamil, Telugu & English Movies/Series with multi-quality streams",
+      "version": "1.0.0",
+      "author": "Xyr0nX",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/movieboxtest.js",
+      "enabled": true,
+      "formats": ["mp4", "m3u8"],
+      "logo": "https://i.postimg.cc/TPwkfqHh/moviebox.png",
+      "contentLanguage": ["en", "hi", "ta", "te"]
     },
     {
       "id": "movieblast",
@@ -751,9 +764,46 @@
         "m3u8"
       ],
       "logo": "https://i.postimg.cc/L64M3bYV/netmirror.png",
-      "contentLanguage": [
-        "en"
-      ]
+      "contentLanguage": ["en"]
+    },
+    {
+      "id": "notorrent",
+      "name": "NoTorrent",
+      "description": "Non-P2P direct resolution proxy.",
+      "version": "1.0.0",
+      "author": "Dustincos",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/notorrent.js",
+      "enabled": true,
+      "formats": ["mp4", "m3u8"],
+      "logo": "https://i.postimg.cc/FsSpNcVP/notorrent.png",
+      "contentLanguage": ["en", "es"]
+    },
+    {
+      "id": "playimdb",
+      "name": "PlayIMDb (Movies)",
+      "description": "High-Speed Direct Streaming for Movies (IMDb ID Extract)",
+      "version": "1.1.4",
+      "author": "Mukesh",
+      "supportedTypes": ["movie"],
+      "filename": "providers/playimdb.js",
+      "enabled": true,
+      "formats": ["mp4", "mkv", "m3u8"],
+      "logo": "https://i.postimg.cc/KzjPtYWY/imdb.png",
+      "contentLanguage": ["en", "hi"]
+    },
+    { 
+      "id": "playimdb_series",
+      "name": "PlayIMDb (Series)",
+      "description": "High-Speed Direct Streaming for TV Shows (StreamIMDb Extract)",
+      "version": "1.2.1",
+      "author": "Mukesh",
+      "supportedTypes": ["tv"],
+      "filename": "providers/playimdb_v2.js",
+      "enabled": true,
+      "formats": ["mp4", "mkv", "m3u8"],
+      "logo": "https://i.postimg.cc/KzjPtYWY/imdb.png",
+      "contentLanguage": ["en", "hi"]
     },
     {
       "id": "purstream",
@@ -775,27 +825,6 @@
       "contentLanguage": [
         "en",
         "fr"
-      ]
-    },
-    {
-      "id": "rgshows",
-      "name": "RGShows",
-      "description": "Discover and stream your favorite Movies, TV Shows & Anime.",
-      "version": "1.0.0",
-      "author": "P-Stream Team",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/rgshows.js",
-      "enabled": true,
-      "formats": [
-        "mp4",
-        "m3u8"
-      ],
-      "logo": "https://i.postimg.cc/kXNS9837/rgshows.png",
-      "contentLanguage": [
-        "en"
       ]
     },
     {
