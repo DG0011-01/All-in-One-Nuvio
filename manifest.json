@@ -575,40 +575,29 @@
       "limited": false
     },
     {
-      "id": "moviebox",
-      "name": "MovieBox",
-      "description": "MovieBox - Hindi, Tamil, Telugu & English Movies/Series with multi-quality streams",
+      "id": "movieboxhindi",
+      "name": "MovieBox-Hindi",
+      "description": "MovieBox - Hindi, & English Movies/Series with multi-quality streams",
       "version": "1.0.0",
       "author": "Sanchit (@S4NCHITT) — Murph's Streams",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/moviebox.js",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/movieboxhindi.js",
       "enabled": true,
       "formats": [
         "mp4",
         "m3u8"
       ],
       "logo": "https://i.postimg.cc/TPwkfqHh/moviebox.png",
-      "contentLanguage": [
-        "en",
-        "hi",
-        "ta",
-        "te"
-      ]
+      "contentLanguage": ["en", "hi"]  
     },
     {
-      "id": "movieboxtest",
-      "name": "MovieBox-Test",
+      "id": "moviebox",
+      "name": "MovieBox",
       "description": "MovieBox - Hindi, Tamil, Telugu & English Movies/Series with multi-quality streams",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "Xyr0nX",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/movieboxtest.js",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/moviebox.js",
       "enabled": true,
       "formats": [
         "mp4",
