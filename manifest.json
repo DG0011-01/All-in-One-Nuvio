@@ -656,6 +656,19 @@
       "contentLanguage": ["en"]
     },
     {
+      "id": "zinkmovies",
+      "name": "ZinkMovies",
+      "description": "Bollywood Movies, Hollywood Movies, South Indian Movies, Hindi Dubbed Movies, Web Series, OTT Releases, & Trending Cinema",
+      "version": "1.0.0",
+      "author": "Kabir",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/zinkmovies.js",
+      "enabled": true,
+      "formats": ["mp4", "mkv", "m3u8"],
+      "logo": "https://i.postimg.cc/XqCZyCgp/zinkmovies.png",
+      "contentLanguage": ["en", "hi", "ta", "te"]
+    },
+    {
       "id": "onlykdrama",
       "name": "OnlyKDrama",
       "description": "Asian Drama",
