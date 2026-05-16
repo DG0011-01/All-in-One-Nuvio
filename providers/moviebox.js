@@ -72,7 +72,7 @@ var MovixPlugin = {
   id:          PLUGIN_ID,
   name:        PLUGIN_NAME,
   version:     "2.0.0",
-  description: "MovieBox - Movies, Series & Anime.",
+  description: "MovieBox — Movies, Series & Anime.",
   language:    "hi",
   logo:        "https://h5-static.aoneroom.com/oneroomProject/icon/moviebox-official.jpg",
 
@@ -113,16 +113,16 @@ var MovixPlugin = {
           var isDash     = fmt === "DASH" || streamUrl.indexOf(".mpd") >= 0;
           var streamType = isDash ? "dash" : fmt === "MP4" ? "mp4" : "hls";
 
-          var quality = "Auto";
-          var m = (s.resolution || "").match(/(\d+)/);
-          if (m) quality = m[1] + "p";
+          
+          var quality = s.resolution || "Auto";
 
           var lang = "Original";
           var lm   = (s.name || "").match(/\(([^)]+)\)/);
           if (lm) lang = lm[1];
 
-          var label = PLUGIN_NAME + " (" + lang + ")" + (quality !== "Auto" ? " " + quality : "");
+          var label = PLUGIN_NAME + " (" + lang + ") - " + quality;
 
+          
           var streamHeaders = s.headers || {};
 
           return {
@@ -131,7 +131,7 @@ var MovixPlugin = {
             type:    streamType,
             label:   label,
             title:   label,
-            name:    PLUGIN_NAME,
+            name:    label,
             headers: streamHeaders,
           };
         }).filter(Boolean);
