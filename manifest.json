@@ -580,9 +580,9 @@
     {
       "id": "vegamovies",
       "name": "VegaMovies",
-      "description": "VegaMovies streaming with high-quality direct links (~6s)",
-      "version": "1.0",
-      "author": "raymondnoodles",
+      "description": "VegaMovies streaming with high-quality direct links",
+      "version": "2.0",
+      "author": "Kabir",
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/vegamovies.js",
       "enabled": true,
