@@ -1,7 +1,7 @@
 "use strict";
 
 var PROVIDER_NAME = "OnlyKDrama";
-var SITE_URL = "https://onlykdrama.top";
+var SITE_URL = "https://onlykdrama.shop";
 var TMDB_URL = "https://www.themoviedb.org";
 var FILEPRESS_ORIGIN = "https://new4.filepress.wiki";
 var DEFAULT_HEADERS = {
@@ -194,7 +194,7 @@ function buildSearchQueries(title, year) {
 
 function extractCandidateUrls(html, mediaType) {
   var segment = mediaType === "movie" ? "/movies/" : "/drama/";
-  var regex = /href=["'](https?:\/\/onlykdrama\.top\/[^"'#?]+)["']/gi;
+  var regex = /href=["'](https?:\/\/onlykdrama\.shop\/[^"'#?]+)["']/gi;
   var urls = [];
   var seen = {};
   var match;
