@@ -1,26 +1,7 @@
 /**
- * fmovies - Built from src/fmovies/
- * Generated: 2026-04-18T19:33:57.982Z
+ * xpass - Built from src/xpass/
+ * Generated: 2026-05-16T18:53:08.246Z
  */
-var __defProp = Object.defineProperty;
-var __defProps = Object.defineProperties;
-var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
-var __getOwnPropSymbols = Object.getOwnPropertySymbols;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __spreadValues = (a, b) => {
-  for (var prop in b || (b = {}))
-    if (__hasOwnProp.call(b, prop))
-      __defNormalProp(a, prop, b[prop]);
-  if (__getOwnPropSymbols)
-    for (var prop of __getOwnPropSymbols(b)) {
-      if (__propIsEnum.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
-    }
-  return a;
-};
-var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 var __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
     var fulfilled = (value) => {
@@ -42,189 +23,135 @@ var __async = (__this, __arguments, generator) => {
   });
 };
 
-// src/fmovies/index.js
-var TMDB_API_KEY = "d131017ccc6e5462a81c9304d21476de";
-var TMDB_BASE_URL = "https://api.themoviedb.org/3";
-var DECRYPT_API_URL = "https://enc-dec.app/api/dec-videasy";
-var REQUEST_HEADERS = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-  Connection: "keep-alive"
+// src/xpass/constants.js
+var XPASS_API = "https://play.xpass.top";
+var BASE_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Referer": `${XPASS_API}/`
 };
-var PLAYBACK_HEADERS = {
-  "User-Agent": REQUEST_HEADERS["User-Agent"],
-  Accept: "application/vnd.apple.mpegurl,application/x-mpegURL,*/*",
-  "Accept-Language": "en-US,en;q=0.9",
-  Referer: "https://www.fmovies.gd/",
-  Origin: "https://www.fmovies.gd",
-  "Sec-Fetch-Dest": "video",
-  "Sec-Fetch-Mode": "cors",
-  "Sec-Fetch-Site": "cross-site"
-};
-var SERVERS = [
-  {
-    name: "Yoru",
-    language: "Original",
-    url: "https://api.videasy.net/cdn/sources-with-title"
-  },
-  {
-    name: "Vyse",
-    language: "Hindi",
-    url: "https://api.videasy.net/hdmovie/sources-with-title"
-  }
-];
-function getJson(url) {
-  return fetch(url, { headers: REQUEST_HEADERS }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} for ${url}`);
-    }
-    return response.json();
-  });
-}
-function getText(url) {
-  return fetch(url, { headers: REQUEST_HEADERS }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} for ${url}`);
-    }
-    return response.text();
-  });
-}
-function postJson(url, payload) {
-  return fetch(url, {
-    method: "POST",
-    headers: __spreadProps(__spreadValues({}, REQUEST_HEADERS), {
-      "Content-Type": "application/json"
-    }),
-    body: JSON.stringify(payload)
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} for ${url}`);
-    }
-    return response.json();
-  });
-}
-function fetchMediaDetails(tmdbId, mediaType) {
-  const normalizedType = mediaType === "tv" || mediaType === "series" ? "tv" : "movie";
-  const url = `${TMDB_BASE_URL}/${normalizedType}/${tmdbId}?api_key=${TMDB_API_KEY}&append_to_response=external_ids`;
-  return getJson(url).then((data) => ({
-    tmdbId: String(data.id || tmdbId),
-    mediaType: normalizedType,
-    title: normalizedType === "tv" ? data.name : data.title,
-    year: normalizedType === "tv" ? String(data.first_air_date || "").slice(0, 4) : String(data.release_date || "").slice(0, 4),
-    imdbId: data.external_ids && data.external_ids.imdb_id ? data.external_ids.imdb_id : ""
-  }));
-}
-function buildServerUrl(server, media, season, episode) {
-  const params = new URLSearchParams();
-  params.set("title", encodeURIComponent(encodeURIComponent(media.title).replace(/\+/g, "%20")));
-  params.set("mediaType", media.mediaType);
-  params.set("year", media.year || "");
-  params.set("tmdbId", media.tmdbId);
-  params.set("imdbId", media.imdbId || "");
-  if (media.mediaType === "tv") {
-    params.set("seasonId", String(season || 1));
-    params.set("episodeId", String(episode || 1));
-  }
-  return `${server.url}?${params.toString()}`;
-}
-function decryptPayload(encryptedText, tmdbId) {
-  return postJson(DECRYPT_API_URL, { text: encryptedText, id: String(tmdbId) }).then((response) => response.result || {});
-}
-function normalizeQuality(value) {
-  const raw = String(value || "").trim();
-  if (!raw) {
-    return "Adaptive";
-  }
-  const upper = raw.toUpperCase();
-  if (/^\d{3,4}P$/.test(upper)) {
-    return upper;
-  }
-  if (/^\d{3,4}p$/.test(raw)) {
-    return raw;
-  }
-  if (/hindi/i.test(raw)) {
-    return "Adaptive";
-  }
-  return raw;
-}
-function createStream(source, server, media) {
-  const quality = normalizeQuality(source.quality);
-  const title = media.year ? `${media.title} (${media.year})` : media.title;
-  return {
-    name: `Fmovies ${server.name} (${server.language}) - ${quality}`,
-    title,
-    url: source.url,
-    quality,
-    headers: PLAYBACK_HEADERS,
-    provider: "fmovies",
-    language: server.language
-  };
-}
-function fetchFromServer(server, media, season, episode) {
-  return getText(buildServerUrl(server, media, season, episode)).then((encryptedText) => {
-    if (!encryptedText || !encryptedText.trim()) {
-      return [];
-    }
-    return decryptPayload(encryptedText, media.tmdbId);
-  }).then((payload) => {
-    const sources = Array.isArray(payload && payload.sources) ? payload.sources : [];
-    return sources.filter((source) => source && typeof source.url === "string" && source.url.includes("workers.dev")).map((source) => createStream(source, server, media));
-  }).catch(() => []);
-}
-function dedupeStreams(streams) {
-  const seen = /* @__PURE__ */ new Set();
-  return streams.filter((stream) => {
-    if (seen.has(stream.url)) {
-      return false;
-    }
-    seen.add(stream.url);
-    return true;
-  });
-}
-function sortStreams(streams) {
-  const rank = (quality) => {
-    const match = String(quality || "").match(/(\d{3,4})/);
-    if (match) {
-      return parseInt(match[1], 10);
-    }
-    if (/adaptive/i.test(String(quality || ""))) {
-      return 9999;
-    }
-    return 0;
-  };
-  return [...streams].sort((left, right) => rank(right.quality) - rank(left.quality));
-}
-function flattenResults(results) {
-  return results.reduce((all, item) => all.concat(item || []), []);
-}
-function getStreams(tmdbIdOrMedia, mediaType = "movie", season = null, episode = null) {
-  return __async(this, null, function* () {
+
+// src/xpass/utils.js
+function generateM3u8(_0, _1) {
+  return __async(this, arguments, function* (streamName, masterUrl, headers = {}) {
     try {
-      let tmdbId;
-      let type;
-      let s;
-      let e;
-      if (typeof tmdbIdOrMedia === "object" && tmdbIdOrMedia !== null) {
-        tmdbId = tmdbIdOrMedia.tmdb_id || tmdbIdOrMedia.tmdbId;
-        type = tmdbIdOrMedia.type || tmdbIdOrMedia.mediaType || "movie";
-        s = tmdbIdOrMedia.season;
-        e = tmdbIdOrMedia.episode;
-      } else {
-        tmdbId = tmdbIdOrMedia;
-        type = mediaType;
-        s = season;
-        e = episode;
+      console.log(`[Xpass] Parsing master m3u8: ${masterUrl}`);
+      const resp = yield fetch(masterUrl, { headers });
+      const text = yield resp.text();
+      const baseUri = masterUrl.substring(0, masterUrl.lastIndexOf("/")) + "/";
+      const results = [];
+      const regex = /#EXT-X-STREAM-INF:.*?RESOLUTION=(\d+x\d+).*?\n([^\n]+)/g;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        const res = match[1].split("x")[1] + "p";
+        let url = match[2].trim();
+        if (!url.startsWith("http")) {
+          if (url.startsWith("/")) {
+            const root = new URL(masterUrl).origin;
+            url = root + url;
+          } else {
+            url = baseUri + url;
+          }
+        }
+        results.push({
+          quality: res,
+          url
+        });
       }
-      const normalizedMediaType = type === "series" ? "tv" : type;
-      const normalizedSeason = s == null ? null : parseInt(s, 10);
-      const normalizedEpisode = e == null ? null : parseInt(e, 10);
-      const media = yield fetchMediaDetails(tmdbId, normalizedMediaType);
-      const results = yield Promise.all(
-        SERVERS.map((server) => fetchFromServer(server, media, normalizedSeason, normalizedEpisode))
-      );
-      return sortStreams(dedupeStreams(flattenResults(results)));
-    } catch (_error) {
-      return [];
+      if (results.length === 0) {
+        return [{ quality: "Auto", url: masterUrl }];
+      }
+      return results;
+    } catch (err) {
+      console.warn(`[Xpass] Error parsing M3U8, returning master URL.`, err);
+      return [{ quality: "Auto", url: masterUrl }];
     }
+  });
+}
+
+// src/xpass/index.js
+function getStreams(tmdbId, mediaType, season, episode) {
+  return __async(this, null, function* () {
+    console.log(`[Xpass] Fetching streams for ${mediaType} ${tmdbId}`);
+    const streams = [];
+    try {
+      const embedUrl = mediaType === "tv" ? `${XPASS_API}/e/tv/${tmdbId}/${season}/${episode}` : `${XPASS_API}/e/movie/${tmdbId}`;
+      console.log(`[Xpass] Navigating to Embed: ${embedUrl}`);
+      const resp = yield fetch(embedUrl, { headers: BASE_HEADERS });
+      const html = yield resp.text();
+      const backupsMatch = html.match(new RegExp("var backups\\s*=\\s*(\\[.*?\\])\\s*(?:;|<\\/script>)", "s"));
+      if (!backupsMatch) {
+        console.log(`[Xpass] No backups variable found in page source.`);
+        return [];
+      }
+      let backups = [];
+      try {
+        backups = JSON.parse(backupsMatch[1]);
+      } catch (e) {
+        console.error(`[Xpass] Failed parsing backups JSON:`, e);
+        return [];
+      }
+      console.log(`[Xpass] Found ${backups.length} servers.`);
+      for (const backup of backups) {
+        try {
+          const serverName = backup.name || "Default";
+          let serverUrl = backup.url;
+          if (!serverUrl)
+            continue;
+          if (!serverUrl.startsWith("http")) {
+            serverUrl = XPASS_API + serverUrl;
+          }
+          console.log(`[Xpass] Fetching JSON from backup server: ${serverUrl}`);
+          const jsonResp = yield fetch(serverUrl, { headers: BASE_HEADERS });
+          const data = yield jsonResp.json();
+          const playlist = data.playlist || [];
+          if (playlist.length === 0)
+            continue;
+          const sources = playlist[0].sources || [];
+          for (const src of sources) {
+            const fileUrl = src.file;
+            if (!fileUrl || !fileUrl.startsWith("http"))
+              continue;
+            const isM3u8 = src.type && src.type.toLowerCase().includes("hls") || fileUrl.includes(".m3u8");
+            if (isM3u8) {
+              const variants = yield generateM3u8(serverName, fileUrl, BASE_HEADERS);
+              variants.forEach((v) => {
+                streams.push({
+                  name: `Xpass [${serverName}]`,
+                  title: v.quality,
+                  url: v.url,
+                  quality: v.quality,
+                  type: "m3u8",
+                  headers: {
+                    "Referer": `${XPASS_API}/`,
+                    "User-Agent": BASE_HEADERS["User-Agent"]
+                  },
+                  provider: "xpass"
+                });
+              });
+            } else {
+              streams.push({
+                name: `Xpass [${serverName}]`,
+                title: "Auto",
+                url: fileUrl,
+                quality: "Auto",
+                type: fileUrl.includes(".mp4") || fileUrl.includes(".mkv") ? "video" : null,
+                headers: {
+                  "Referer": `${XPASS_API}/`,
+                  "User-Agent": BASE_HEADERS["User-Agent"]
+                },
+                provider: "xpass"
+              });
+            }
+          }
+        } catch (srvErr) {
+          console.warn(`[Xpass] Failed querying server ${backup.name}:`, srvErr.message);
+        }
+      }
+    } catch (error) {
+      console.error(`[Xpass] Unexpected overall error:`, error.message);
+    }
+    console.log(`[Xpass] Returning ${streams.length} parsed streams.`);
+    return streams;
   });
 }
 module.exports = { getStreams };
