@@ -161,6 +161,19 @@
       "contentLanguage": ["en"]
     },
     {
+      "id": "cinemm",
+      "name": "CineMM",
+      "description": "Direct MP4 streams from cinemm.com — Next.js RSC API, quota bypass, multi-CDN (stream.cmreel.com, stream.cmapp.tv)",
+      "version": "1.0.0",
+      "author": "piratezoro9",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/cinemm.js",
+      "enabled": true,
+      "formats": ["mp4", "mkv"],
+      "logo": "",
+      "contentLanguage": ["en"]
+    },
+    {
       "id": "cinemacity",
       "name": "CinemaCity",
       "description": "Multi Language Provider",
@@ -295,7 +308,7 @@
       "name": "🎬 HDMovie2",
       "description": "Bollywood & Hindi Dubbed Movies",
       "version": "1.0.0",
-      "author": "Kabir",
+      "author": "piratezoro9",
       "supportedTypes": ["movie"],
       "filename": "providers/hdmovie2.js",
       "enabled": true,
@@ -582,7 +595,7 @@
       "name": "VegaMovies",
       "description": "VegaMovies streaming with high-quality direct links",
       "version": "2.0",
-      "author": "Kabir",
+      "author": "piratezoro9",
       "supportedTypes": ["movie", "tv"],
       "filename": "providers/vegamovies.js",
       "enabled": true,
