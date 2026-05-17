@@ -1,6 +1,6 @@
 /**
  * notorrent - Built from src/notorrent/
- * Generated: 2026-05-11T13:43:18.799Z
+ * Generated: 2026-05-16T18:53:08.239Z
  */
 var __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
@@ -104,6 +104,7 @@ function getStreams(tmdbId, mediaType, season, episode) {
           title: quality,
           url: item.url,
           quality,
+          type: item.url.includes(".m3u8") ? "m3u8" : item.url.includes(".mp4") || item.url.includes(".mkv") ? "video" : null,
           headers: Object.keys(headers).length > 0 ? headers : void 0,
           provider: "notorrent"
         });
