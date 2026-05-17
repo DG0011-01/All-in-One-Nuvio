@@ -273,12 +273,20 @@
       "description": "Direct MP4 streams from cinemm.com — Next.js RSC API, quota bypass, multi-CDN (stream.cmreel.com, stream.cmapp.tv)",
       "version": "1.0.0",
       "author": "piratezoro9",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/cinemm.js",
       "enabled": true,
-      "formats": ["mp4", "mkv"],
+      "formats": [
+        "mp4",
+        "mkv"
+      ],
       "logo": "https://i.postimg.cc/GtQX10hd/cinemm.png",
-      "contentLanguage": ["en"]
+      "contentLanguage": [
+        "en"
+      ]
     },
     {
       "id": "cinemacity",
@@ -511,7 +519,9 @@
       "description": "Bollywood & Hindi Dubbed Movies",
       "version": "1.0.0",
       "author": "piratezoro9",
-      "supportedTypes": ["movie"],
+      "supportedTypes": [
+        "movie"
+      ],
       "filename": "providers/hdmovie2.js",
       "enabled": true,
       "formats": [
@@ -947,7 +957,10 @@
       "description": "VegaMovies streaming with high-quality direct links",
       "version": "2.0",
       "author": "piratezoro9",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/vegamovies.js",
       "enabled": true,
       "formats": [
@@ -1072,12 +1085,24 @@
       "description": "Bollywood Movies, Hollywood Movies, South Indian Movies, Hindi Dubbed Movies, Web Series, OTT Releases, & Trending Cinema",
       "version": "1.0.0",
       "author": "Kabir",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/zinkmovies.js",
       "enabled": true,
-      "formats": ["mp4", "mkv", "m3u8"],
+      "formats": [
+        "mp4",
+        "mkv",
+        "m3u8"
+      ],
       "logo": "https://i.postimg.cc/XqCZyCgp/zinkmovies.png",
-      "contentLanguage": ["en", "hi", "ta", "te"]
+      "contentLanguage": [
+        "en",
+        "hi",
+        "ta",
+        "te"
+      ]
     },
     {
       "id": "onlykdrama",
