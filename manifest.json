@@ -474,6 +474,19 @@
       "contentLanguage": ["en", "es"]
     },
     {
+      "id": "peachify",
+      "name": "Peachify",
+      "description": "Streams from peachify.top — 3 server sources (MovieBox/Holly/Air) via Cloudflare Workers with AES-256-GCM decryption",
+      "version": "1.0.0",
+      "author": "piratezoro9",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/peachify.js",
+      "enabled": true,
+      "formats": ["m3u8", "mp4"],
+      "logo": "https://peachify.top/favicon.ico",
+      "contentLanguage": ["en", "hi", "te","ta", "pt"]
+    },
+    {
       "id": "playimdb",
       "name": "PlayIMDb (Movies)",
       "description": "High-Speed Direct Streaming for Movies (IMDb ID Extract)",
