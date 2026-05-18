@@ -475,7 +475,7 @@
     },
     {
       "id": "peachify",
-      "name": "Peachify",
+      "name": "🍑 Peachify",
       "description": "Streams from peachify.top — 3 server sources (MovieBox/Holly/Air) via Cloudflare Workers with AES-256-GCM decryption",
       "version": "1.0.0",
       "author": "piratezoro9",
