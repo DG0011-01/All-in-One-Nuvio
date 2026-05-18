@@ -1,132 +1,137 @@
-import { NETMIRROR_URL, PLATFORM_MAP, BASE_HEADERS, TMDB_API_KEY } from './constants.js';
-import { bypass, getUnixTime } from './utils.js';
+import { OTT_SERVICES } from './constants.js';
+import { getNfMirrorApi, getMediaDetails } from './utils.js';
 
 async function getStreams(tmdbId, mediaType, season, episode) {
-    console.log(`[NetMirror] Fetching streams for ${mediaType} ${tmdbId}`);
+    console.log(`[NetMirror] Starting search for ${mediaType} ${tmdbId}`);
+    const finalStreams = [];
+
     try {
-        const cookie = await bypass();
-        const cookies = `t_hash_t=${cookie}; hd=on`;
-
-        const tmdbType = mediaType === 'tv' ? 'tv' : 'movie';
-        const tmdbResp = await fetch(`https://api.themoviedb.org/3/${tmdbType}/${tmdbId}?api_key=${TMDB_API_KEY}`);
-        const tmdbData = await tmdbResp.json();
-        const title = mediaType === 'tv' ? tmdbData.name : tmdbData.title;
-
-        if (!title) throw new Error("Could not fetch title from TMDB");
-
-        const platforms = ['netflix', 'primevideo', 'hotstar', 'disney'];
-        for (const platformKey of platforms) {
-            const platform = PLATFORM_MAP[platformKey];
-            const streams = await fetchFromPlatform(platformKey, title, mediaType, season, episode, cookies);
-            if (streams && streams.length > 0) return streams;
+        const media = await getMediaDetails(tmdbId, mediaType);
+        const title = mediaType === 'tv' ? media.name : media.title;
+        
+        if (!title) {
+            console.log(`[NetMirror] Could not retrieve media title.`);
+            return [];
         }
 
-        return [];
-    } catch (error) {
-        console.error(`[NetMirror] Error: ${error.message}`);
-        return [];
+        const apiBase = await getNfMirrorApi();
+        console.log(`[NetMirror] Resolved API base: ${apiBase}`);
+
+        const promises = OTT_SERVICES.map(service => 
+            extractServiceStreams(apiBase, service, title, mediaType, season, episode)
+                .catch(e => {
+                    console.warn(`[NetMirror] Error from service ${service.name}:`, e.message);
+                    return [];
+                })
+        );
+
+        const results = await Promise.all(promises);
+        
+        for (const list of results) {
+            finalStreams.push(...list);
+        }
+
+    } catch (err) {
+        console.error('[NetMirror] Fatal overall extraction failure:', err.message);
     }
+
+    console.log(`[NetMirror] Returning total ${finalStreams.length} stream(s).`);
+    return finalStreams;
 }
 
-async function fetchFromPlatform(platformKey, title, mediaType, season, episode, cookies) {
-    const platform = PLATFORM_MAP[platformKey];
-    const searchUrl = `${NETMIRROR_URL}${platform.search}?s=${encodeURIComponent(title)}&t=${getUnixTime()}`;
+async function extractServiceStreams(apiBase, service, rawTitle, mediaType, season, episode) {
+    const serviceStreams = [];
+    const title = rawTitle.trim();
     
-    const searchResp = await fetch(searchUrl, {
-        headers: { ...BASE_HEADERS, Cookie: `${cookies}; ott=${platform.ott}` }
-    });
-    const searchData = await searchResp.json();
+    const headers = {
+        "ott": service.code,
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+        "x-requested-with": "NetmirrorNewTV v1.0"
+    };
 
-    if (!searchData.searchResult || searchData.searchResult.length === 0) return null;
+    console.log(`[NetMirror] Searching ${service.name} for "${title}"`);
 
-    // Simplified: first result. A more robust implementation would check year/title similarity.
-    const result = searchData.searchResult[0];
-    const contentId = result.id;
+    const searchUrl = `${apiBase}/search.php?s=${encodeURIComponent(title)}`;
+    const searchResp = await fetch(searchUrl, { headers });
+    const searchJson = await searchResp.json();
+    
+    const searchResults = searchJson.searchResult || [];
+    const match = searchResults.find(item => item.t && item.t.trim().toLowerCase() === title.toLowerCase());
+    
+    if (!match || !match.id) {
+        console.log(`[NetMirror] No direct match on ${service.name}`);
+        return [];
+    }
 
-    const postUrl = `${NETMIRROR_URL}${platform.post}?id=${contentId}&t=${getUnixTime()}`;
-    const postResp = await fetch(postUrl, {
-        headers: { ...BASE_HEADERS, Cookie: `${cookies}; ott=${platform.ott}` }
-    });
-    const postData = await postResp.json();
+    const netId = match.id;
+    let finalId = netId;
 
-    let targetId = contentId;
     if (mediaType === 'tv') {
-        const episodes = await getAllEpisodes(contentId, postData, platform, cookies);
-        const targetEp = episodes.find(ep => {
-            if (!ep) return false;
-            const s = parseInt(ep.s.replace('S', ''));
-            const e = parseInt(ep.ep.replace('E', ''));
-            return s === season && e === episode;
-        });
-
-        if (targetEp) {
-            targetId = targetEp.id;
-        } else {
-            return null;
+        console.log(`[NetMirror] TV Match on ${service.name} (ID: ${netId}), drilling down to S${season}E${episode}`);
+        
+        const postResp = await fetch(`${apiBase}/post.php?id=${netId}`, { headers });
+        const postData = await postResp.json();
+        
+        const seasons = postData.season || [];
+        const targetTerm = `Season ${season}`;
+        const seasonEntry = seasons.find(s => s.s && s.s.toString().includes(targetTerm));
+        
+        if (!seasonEntry || !seasonEntry.id) {
+            console.log(`[NetMirror] Season ${season} not found on ${service.name}`);
+            return [];
         }
+        
+        const seasonId = seasonEntry.id;
+        let episodeId = null;
+        let page = 1;
+        
+        while (!episodeId && page < 10) {
+            console.log(`[NetMirror] Paging episodes list (Page ${page}) on ${service.name}`);
+            const epResp = await fetch(`${apiBase}/episodes.php?id=${seasonId}&page=${page}`, { headers });
+            const epData = await epResp.json();
+            
+            const episodesList = epData.episodes || [];
+            const epMatch = episodesList.find(e => e.ep && e.ep.toString() === episode.toString());
+            
+            if (epMatch && epMatch.id) {
+                episodeId = epMatch.id;
+            }
+            
+            if (parseInt(epData.nextPageShow) !== 1) {
+                break;
+            }
+            page++;
+        }
+        
+        if (!episodeId) {
+            console.log(`[NetMirror] Episode ${episode} not found on ${service.name}`);
+            return [];
+        }
+        
+        finalId = episodeId;
     }
 
-    const playlistUrl = `${NETMIRROR_URL}${platform.playlist}?id=${targetId}&t=${encodeURIComponent(title)}&tm=${getUnixTime()}`;
-    const playlistResp = await fetch(playlistUrl, {
-        headers: { ...BASE_HEADERS, Cookie: `${cookies}; ott=${platform.ott}` }
-    });
-    const playlist = await playlistResp.json();
-
-    const streams = [];
-    if (Array.isArray(playlist)) {
-        playlist.forEach(item => {
-            if (!item.sources) return;
-            item.sources.forEach(source => {
-                streams.push({
-                    name: `NetMirror (${platformKey.charAt(0).toUpperCase() + platformKey.slice(1)})`,
-                    title: `${title} ${source.label}`,
-                    url: source.file.startsWith('http') ? source.file : `${NETMIRROR_URL}${source.file.startsWith('/') ? '' : '/'}${source.file}`,
-                    quality: source.label,
-                    headers: { Referer: `${NETMIRROR_URL}/home`, Cookie: "hd=on" }
-                });
-            });
-        });
-    }
-
-    return streams;
-}
-
-async function getAllEpisodes(contentId, postData, platform, cookies) {
-    const episodes = [...(postData.episodes || [])].filter(e => e !== null);
+    console.log(`[NetMirror] Fetching final stream payload for ID ${finalId} on ${service.name}`);
+    const playerResp = await fetch(`${apiBase}/player.php?id=${finalId}`, { headers });
+    const playerData = await playerResp.json();
     
-    if (postData.nextPageShow === 1 && postData.nextPageSeason) {
-        const more = await fetchEpisodesPage(contentId, postData.nextPageSeason, 2, platform, cookies);
-        episodes.push(...more);
-    }
-
-    if (postData.season && postData.season.length > 1) {
-        // Handle multiple seasons
-        for (let i = 0; i < postData.season.length - 1; i++) {
-            const season = postData.season[i];
-            const more = await fetchEpisodesPage(contentId, season.id, 1, platform, cookies);
-            episodes.push(...more);
-        }
-    }
-
-    return episodes;
-}
-
-async function fetchEpisodesPage(contentId, seasonId, page, platform, cookies) {
-    const episodes = [];
-    let pg = page;
-    while (true) {
-        const url = `${NETMIRROR_URL}${platform.episodes}?s=${seasonId}&series=${contentId}&t=${getUnixTime()}&page=${pg}`;
-        const resp = await fetch(url, {
-            headers: { ...BASE_HEADERS, Cookie: `${cookies}; ott=${platform.ott}` }
+    if (playerData && playerData.video_link) {
+        serviceStreams.push({
+            name: service.name,
+            title: "Auto",
+            url: playerData.video_link,
+            quality: "Auto",
+            type: playerData.video_link.includes(".m3u8") ? "m3u8" : playerData.video_link.includes(".mp4") || playerData.video_link.includes(".mkv") ? "video" : null,
+            headers: {
+                "Referer": playerData.referer || "",
+                "User-Agent": headers["user-agent"]
+            },
+            provider: "netmirror"
         });
-        const data = await resp.json();
-        if (data.episodes) {
-            episodes.push(...data.episodes.filter(e => e !== null));
-        }
-        if (data.nextPageShow === 0) break;
-        pg++;
+        console.log(`[NetMirror] SUCCESS: Captured link for ${service.name}`);
     }
-    return episodes;
+
+    return serviceStreams;
 }
 
 module.exports = { getStreams };
