@@ -405,12 +405,20 @@
       "description": "Movies via GoatAPI, indexed by TMDB",
       "version": "1.0.0",
       "author": "Aeyshx",
-      "supportedTypes": ["movie"],
+      "supportedTypes": [
+        "movie"
+      ],
       "filename": "providers/goatapi.js",
       "enabled": true,
-      "formats": ["mp4", "mkv", "m3u8"],
+      "formats": [
+        "mp4",
+        "mkv",
+        "m3u8"
+      ],
       "logo": "https://i.postimg.cc/d1vkPZpY/goatapi.png",
-      "contentLanguage": ["en"]
+      "contentLanguage": [
+        "en"
+      ]
     },
     {
       "id": "netmirrornew",
