@@ -3,7 +3,7 @@
 // =============================================================
 
 var DOMAINS_URL    = 'https://raw.githubusercontent.com/wooodyhood/nuvio-repo/main/domains.json';
-var TOFLIX_FALLBACK = 'sbs';
+var TOFLIX_FALLBACK = 'fit';
 var TOFLIX_API     = 'https://api.toflix.' + TOFLIX_FALLBACK + '/toflix_api.php';
 var TOFLIX_REFERER = 'https://toflix.' + TOFLIX_FALLBACK + '/';
 var TOFLIX_TOKEN   = 'TobiCocoToflix2025TokenDeLaV2MeilleurSiteDeStreaminAuMondeEntierQuiEcraseToutSurSonCheminNeDevenezPasJalouxBandeDeNoobs';
