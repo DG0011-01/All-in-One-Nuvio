@@ -42,10 +42,11 @@ var __async = (__this, __arguments, generator) => {
 var cheerio = require("cheerio-without-node-native");
 var CryptoJS = require("crypto-js");
 var PROVIDER_NAME = "Asura | ZinkMovies";
-var MAIN_URL = "https://new7.zinkmovies.biz";
+var MAIN_URL = "https://new8.zinkmovies.biz";
 var TMDB_API_KEY = "439c478a771f35c05022f9feabcca01c";
 var HRUJO_KEY = "1EN-Yy+CfM39lPQMhPhiCSKDaYA6mRO++nHNRq9ZfhtGHPwC8DWQq9q5IGK49Iqc";
-var REQUEST_TIMEOUT = 1e4;
+var REQUEST_TIMEOUT = 15e3;
+var HUBCLOUD_COOKIES = "xla=s4t; xyt=1";
 var HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
   "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -143,7 +144,13 @@ function chunkAll(taskFns, size = 3) {
   return __async(this, null, function* () {
     const results = [];
     for (let i = 0; i < taskFns.length; i += size) {
-      const batch = yield Promise.all(taskFns.slice(i, i + size).map((fn) => fn().catch(() => [])));
+      const batch = yield Promise.all(taskFns.slice(i, i + size).map((fn) => __async(this, null, function* () {
+        try {
+          return yield fn();
+        } catch (e) {
+          return [];
+        }
+      })));
       batch.forEach((r) => results.push(...Array.isArray(r) ? r : r ? [r] : []));
     }
     return results;
@@ -325,7 +332,7 @@ function resolveEmbed(imdbId, label, isTv = false, season, episode) {
       }
       console.log("[" + PROVIDER_NAME + "] Embed: fetching " + playerUrl);
       const res = yield fetchSafe(playerUrl, {
-        headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": "https://new7.zinkmovies.biz/", "Origin": "https://new7.zinkmovies.biz" })
+        headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": "https://new8.zinkmovies.biz/", "Origin": "https://new8.zinkmovies.biz" })
       }, 1e4);
       if (!res) {
         console.log("[" + PROVIDER_NAME + "] Embed: fetch returned null");
@@ -504,7 +511,7 @@ function resolveHubCloud(url, label, quality) {
       let bridgeUrl = url;
       if (!url.includes("hubcloud.php")) {
         console.log("[" + PROVIDER_NAME + "] HubCloud: fetching landing page " + url.substring(0, 80));
-        const hubHeaders = __spreadProps(__spreadValues({}, HEADERS), { "Referer": MAIN_URL + "/", "Cookie": "xla=s4t" });
+        const hubHeaders = __spreadProps(__spreadValues({}, HEADERS), { "Referer": "https://hubcloud.one/", "Cookie": HUBCLOUD_COOKIES });
         const $ = yield fetchHtml(url, { headers: hubHeaders });
         if (!$) {
           console.log("[" + PROVIDER_NAME + "] HubCloud: landing page fetch failed");
@@ -528,9 +535,13 @@ function resolveHubCloud(url, label, quality) {
         }
       }
       console.log("[" + PROVIDER_NAME + "] HubCloud: fetching bridge page " + bridgeUrl.substring(0, 100));
-      const $b = yield fetchHtml(bridgeUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": url, "Cookie": "xla=s4t" }) });
-      if (!$b)
+      const bridgeRes = yield fetchSafe(bridgeUrl, {
+        headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": "https://hubcloud.one/", "Cookie": HUBCLOUD_COOKIES })
+      });
+      if (!bridgeRes)
         return [];
+      const bridgeHtml = yield bridgeRes.text();
+      const $b = cheerio.load(bridgeHtml);
       const headerText = $b("div.card-header").text() || "";
       const detectedQuality = parseQuality(headerText) || quality;
       const streams = [];
@@ -538,13 +549,15 @@ function resolveHubCloud(url, label, quality) {
       $b("a.btn").each((i, el) => {
         const link = $b(el).attr("href");
         const text = $b(el).text().trim();
-        const label2 = $b(el).text().toLowerCase();
+        const labelTxt = $b(el).text().toLowerCase();
         if (!link)
           return;
-        if (label2.includes("fsl")) {
+        if (labelTxt.includes("fsl")) {
           const synced = link + "1" + (/* @__PURE__ */ new Date()).getMinutes();
-          console.log("[" + PROVIDER_NAME + "] HubCloud: FSL link found (quality=" + detectedQuality + ")");
-          streams.push(makeStream("FSL | " + detectedQuality, text + " [" + headerText + "]", synced, detectedQuality, { "Referer": bridgeRef }));
+          const isAv1 = headerText.includes("AV1") || labelTxt.includes("av1");
+          const codecTag = isAv1 ? " \u26A0\uFE0FAV1" : "";
+          console.log("[" + PROVIDER_NAME + "] HubCloud: FSL link found (quality=" + detectedQuality + (isAv1 ? ", AV1" : "") + ")");
+          streams.push(makeStream("FSL" + codecTag + " | " + detectedQuality, text + " [" + headerText + "]", synced, detectedQuality, { "Referer": bridgeRef }));
         }
       });
       console.log("[" + PROVIDER_NAME + "] HubCloud: found " + streams.length + " playable streams");
@@ -553,14 +566,6 @@ function resolveHubCloud(url, label, quality) {
       console.error("[" + PROVIDER_NAME + "] HubCloud error: " + e.message);
       return [];
     }
-  });
-}
-function resolveGDFlix(url, label, quality) {
-  return __async(this, null, function* () {
-    if (visitedUrls.has(url))
-      return [];
-    visitedUrls.add(url);
-    return [];
   });
 }
 function resolveZinkCloud(url, label, quality) {
@@ -583,26 +588,9 @@ function resolveZinkCloud(url, label, quality) {
       }
       console.log("[" + PROVIDER_NAME + "] ZinkCloud: token obtained, length=" + tokenData.token.length);
       const dlPageUrl = domain + "/dl/" + tokenData.token;
-      console.log("[" + PROVIDER_NAME + "] ZinkCloud: fetching Worker + mirrors in parallel...");
-      const [workerData, dlHtml] = yield Promise.all([
-        fetchJson(domain + "/server-handler.php", {
-          method: "POST",
-          headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": dlPageUrl, "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" }),
-          body: JSON.stringify({ server: "worker", random_id: fileID })
-        }),
-        fetchHtml(dlPageUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": url }) })
-      ]);
+      console.log("[" + PROVIDER_NAME + "] ZinkCloud: fetching DL page...");
+      const dlHtml = yield fetchHtml(dlPageUrl, { headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": url }) });
       const streams = [];
-      if (workerData && workerData.success && workerData.url) {
-        let workerUrl = workerData.url;
-        if (workerUrl.match(/\.zip$/i)) {
-          const stripped = workerUrl.replace(/\.zip$/i, "");
-          console.log("[" + PROVIDER_NAME + "] ZinkCloud: Worker URL had .zip, trying without: " + stripped.substring(0, 80));
-          workerUrl = stripped;
-        }
-        console.log("[" + PROVIDER_NAME + "] ZinkCloud: Worker URL obtained");
-        streams.push(makeStream("Worker | " + quality, label + " [Direct]", workerUrl, quality, { "Referer": dlPageUrl }));
-      }
       const hubLinks = [];
       if (dlHtml) {
         dlHtml("a.btn.hubcloud").each((i, el) => {
@@ -612,6 +600,7 @@ function resolveZinkCloud(url, label, quality) {
         });
       }
       if (hubLinks.length > 0) {
+        console.log("[" + PROVIDER_NAME + "] ZinkCloud: resolving " + hubLinks.length + " HubCloud links for FSL");
         const hubResults = yield Promise.all(hubLinks.map(
           (href) => resolveHubCloud(href, label, quality).catch(() => null)
         ));
@@ -655,8 +644,6 @@ function resolveLinkStore(url, targetEpisode, label) {
             tasks.push(() => resolveZinkCloud(href, label, quality));
           else if (href.includes("hubcloud"))
             tasks.push(() => resolveHubCloud(href, label, quality));
-          else if (href.includes("gdflix") || href.includes("gdlink"))
-            tasks.push(() => resolveGDFlix(href, label, quality));
           return;
         }
         const epMatch = text.match(/EPISODE\s*-\s*(\d+)/i) || text.match(/EP\s*0*(\d+)/i);
@@ -667,8 +654,6 @@ function resolveLinkStore(url, targetEpisode, label) {
             tasks.push(() => resolveZinkCloud(href, label, quality));
           else if (href.includes("hubcloud"))
             tasks.push(() => resolveHubCloud(href, label, quality));
-          else if (href.includes("gdflix") || href.includes("gdlink"))
-            tasks.push(() => resolveGDFlix(href, label, quality));
         }
       });
       console.log("[" + PROVIDER_NAME + "] LinkStore: queued " + tasks.length + " tasks");
@@ -712,7 +697,7 @@ function extractFromPage(pageUrl, label, isTv = false, targetSeason, targetEpiso
           collected.push({ href, text, quality });
         }
       });
-      console.log("[" + PROVIDER_NAME + "] extractFromPage: collected " + collected.length + " buttons");
+      console.log("[" + PROVIDER_NAME + "] extractFromPage: collected " + collected.length + " buttons (no cap)");
       const tasks = collected.map((btn) => () => {
         if (btn.href.includes("linkstore"))
           return resolveLinkStore(btn.href, targetEpisode, label + (isTv ? " S" + targetSeason : ""));
@@ -720,8 +705,6 @@ function extractFromPage(pageUrl, label, isTv = false, targetSeason, targetEpiso
           return resolveZinkCloud(btn.href, label, btn.quality);
         if (btn.href.includes("hubcloud"))
           return resolveHubCloud(btn.href, label, btn.quality);
-        if (btn.href.includes("gdflix") || btn.href.includes("gdlink"))
-          return resolveGDFlix(btn.href, label, btn.quality);
         return Promise.resolve([]);
       });
       const streams = yield chunkAll(tasks, 3);
@@ -749,9 +732,11 @@ function getStreams(tmdbId, mediaType, season, episode) {
       console.log("[" + PROVIDER_NAME + "] isTv=" + isTv);
       const safeSeason = season != null ? Number(season) : null;
       const safeEpisode = episode != null ? Number(episode) : null;
-      const embedPromise = info.imdbId ? resolveEmbed(info.imdbId, info.title, isTv, safeSeason, safeEpisode) : Promise.resolve([]);
-      console.log("[" + PROVIDER_NAME + "] Searching site for: " + info.title);
-      const searchResults = yield searchSite(info.title, info.year);
+      const [embedStreams, searchResults] = yield Promise.all([
+        info.imdbId ? resolveEmbed(info.imdbId, info.title, isTv, safeSeason, safeEpisode) : Promise.resolve([]),
+        searchSite(info.title, info.year)
+      ]);
+      console.log("[" + PROVIDER_NAME + "] Embed streams: " + embedStreams.length + " | Search results: " + searchResults.length);
       let bestMatch = null, bestScore = 0;
       for (const r of searchResults) {
         const score = similarity(info.title, r.title, info.year);
@@ -761,16 +746,14 @@ function getStreams(tmdbId, mediaType, season, episode) {
         }
       }
       console.log("[" + PROVIDER_NAME + "] Best match: " + (bestMatch ? bestMatch.title + " (score=" + bestScore.toFixed(2) + ")" : "NONE"));
-      let pageStreams = [];
+      let fslStreams = [];
       if (bestMatch && bestScore > 0.4) {
-        console.log("[" + PROVIDER_NAME + "] Extracting from page: " + bestMatch.href);
-        pageStreams = yield extractFromPage(bestMatch.href, info.title, isTv, safeSeason, safeEpisode);
+        console.log("[" + PROVIDER_NAME + "] Extracting FSL from page: " + bestMatch.href);
+        fslStreams = yield extractFromPage(bestMatch.href, info.title, isTv, safeSeason, safeEpisode);
       }
-      const embedStreams = yield embedPromise;
-      console.log("[" + PROVIDER_NAME + "] Embed streams: " + embedStreams.length + ", Page streams: " + pageStreams.length);
-      const result = dedupe([...embedStreams, ...pageStreams]);
-      console.log("[" + PROVIDER_NAME + "] Total unique streams: " + result.length);
-      return result;
+      const allStreams = dedupe([...embedStreams, ...fslStreams]);
+      console.log("[" + PROVIDER_NAME + "] Total unique streams: " + allStreams.length + " (embed=" + embedStreams.length + " fsl=" + fslStreams.length + ")");
+      return allStreams;
     } catch (e) {
       console.error("[" + PROVIDER_NAME + "] Fatal: " + e.message);
       return [];

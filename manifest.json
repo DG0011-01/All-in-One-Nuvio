@@ -400,26 +400,17 @@
       ]
     },
     {
-      "id": "embed69",
-      "name": "Embed69",
-      "description": "Movies & Series in English & Spanish",
+      "id": "goatapi",
+      "name": "GoatAPI",
+      "description": "Movies via GoatAPI, indexed by TMDB",
       "version": "1.0.0",
-      "author": "KennethJYS",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/embed69.js",
+      "author": "Aeyshx",
+      "supportedTypes": ["movie"],
+      "filename": "providers/goatapi.js",
       "enabled": true,
-      "formats": [
-        "mp4",
-        "m3u8"
-      ],
-      "logo": "https://i.postimg.cc/SK9YMsHG/embed69.png",
-      "contentLanguage": [
-        "en",
-        "es"
-      ]
+      "formats": ["mp4", "mkv", "m3u8"],
+      "logo": "https://i.postimg.cc/d1vkPZpY/goatapi.png",
+      "contentLanguage": ["en"]
     },
     {
       "id": "netmirrornew",
