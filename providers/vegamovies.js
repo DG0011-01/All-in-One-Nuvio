@@ -63,8 +63,7 @@ function fetchSafe(_0) {
     try {
       const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(timeout) : null;
       const merged = __spreadProps(__spreadValues({}, options), { headers: __spreadValues(__spreadValues({}, HEADERS), options.headers || {}) });
-      if (signal)
-        merged.signal = signal;
+      if (signal) merged.signal = signal;
       return yield fetch(url, merged);
     } catch (e) {
       if (e.name === "AbortError") {
@@ -80,9 +79,9 @@ function fetchJson(_0) {
   return __async(this, arguments, function* (url, options = {}) {
     try {
       const res = yield fetchSafe(url, options);
-      if (!res || !res.ok)
-        return null;
-      return yield res.json();
+      if (!res || !res.ok) return null;
+      const text = yield res.text();
+      return JSON.parse(text);
     } catch (e) {
       return null;
     }
@@ -92,8 +91,7 @@ function fetchHtml(_0) {
   return __async(this, arguments, function* (url, options = {}) {
     try {
       const res = yield fetchSafe(url, options);
-      if (!res || !res.ok)
-        return null;
+      if (!res || !res.ok) return null;
       return cheerio.load(yield res.text());
     } catch (e) {
       return null;
@@ -103,36 +101,26 @@ function fetchHtml(_0) {
 function getOrigin(url) {
   try {
     const parts = url.split("//");
-    if (parts.length < 2)
-      return url;
+    if (parts.length < 2) return url;
     return parts[0] + "//" + parts[1].split("/")[0];
   } catch (e) {
     return url;
   }
 }
 function fixUrl(url) {
-  if (!url)
-    return "";
-  if (url.startsWith("http://") || url.startsWith("https://"))
-    return url;
-  if (url.startsWith("//"))
-    return "https:" + url;
-  if (url.startsWith("/"))
-    return baseUrl + url;
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("//")) return "https:" + url;
+  if (url.startsWith("/")) return baseUrl + url;
   return baseUrl + "/" + url;
 }
 function parseQuality(text) {
   const t = String(text || "").toLowerCase();
-  if (t.includes("2160") || t.includes("4k") || t.includes("uhd"))
-    return "2160p";
-  if (t.includes("1440") || t.includes("2k"))
-    return "1440p";
-  if (t.includes("1080"))
-    return "1080p";
-  if (t.includes("720"))
-    return "720p";
-  if (t.includes("480"))
-    return "480p";
+  if (t.includes("2160") || t.includes("4k") || t.includes("uhd")) return "2160p";
+  if (t.includes("1440") || t.includes("2k")) return "1440p";
+  if (t.includes("1080")) return "1080p";
+  if (t.includes("720")) return "720p";
+  if (t.includes("480")) return "480p";
   return "HD";
 }
 function makeStream(name, title, url, quality, headers) {
@@ -141,51 +129,35 @@ function makeStream(name, title, url, quality, headers) {
     title: title || PROVIDER_NAME + " Stream",
     url: url || "",
     quality: quality || "HD",
-    headers: headers || { "Referer": baseUrl + "/" }
+    behaviorHints: {
+      notWebReady: true,
+      proxyHeaders: {
+        request: headers || { "Referer": baseUrl + "/" }
+      }
+    }
   };
 }
 function dedupe(streams) {
   const seen = /* @__PURE__ */ new Set();
   return (streams || []).filter((s) => {
-    if (!s || !s.url || seen.has(s.url))
-      return false;
+    if (!s || !s.url || seen.has(s.url)) return false;
     seen.add(s.url);
     return true;
   });
 }
-function similarity(s1, s2, year, season) {
-  if (!s1 || !s2)
-    return 0;
-  const clean = (s) => s.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
-  const w1 = clean(s1);
-  const w2 = new Set(clean(s2));
-  const intersection = w1.filter((x) => w2.has(x)).length;
-  let score = intersection / Math.max(w1.length, 1);
-  if (year && String(s2).includes(String(year)))
-    score += 0.2;
-  if (s2.toLowerCase().startsWith(s1.toLowerCase()))
-    score += 0.1;
-  if (season) {
-    const sStr = String(season);
-    const sRegex = new RegExp("(?:s|season|staffel|saison)\\s*0*" + sStr + "\\b", "i");
-    const rangeRegex = new RegExp("(?:s|season)\\s*0*\\d+\\s*-\\s*0*\\d+", "i");
-    if (sRegex.test(s2)) {
-      score += 0.5;
-    } else if (rangeRegex.test(s2)) {
-      const match = s2.match(/(?:s|season)\s*0*(\d+)\s*-\s*0*(\d+)/i);
-      if (match) {
-        const start = parseInt(match[1]);
-        const end = parseInt(match[2]);
-        if (season >= start && season <= end)
-          score += 0.4;
-      }
-    } else if (s2.toLowerCase().includes("complete") || s2.toLowerCase().includes("all seasons")) {
-      score += 0.2;
-    } else if (/(?:s|season)\s*0*\d+/i.test(s2)) {
-      score -= 0.3;
+function isStrictMatch(requestedTitle, requestedYear, scrapedTitle, scrapedYear) {
+  if (!requestedTitle || !scrapedTitle) return false;
+  const reqClean = requestedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, " ").trim().replace(/\s+/g, " ");
+  const scrClean = scrapedTitle.toLowerCase().replace(/download\s*/g, "").replace(/[^a-z0-9\s]/g, " ").trim().replace(/\s+/g, " ");
+  if (!scrClean.includes(reqClean) && !scrClean.startsWith(reqClean)) return false;
+  if (requestedYear && scrapedYear) {
+    const rY = parseInt(requestedYear);
+    const sY = parseInt(scrapedYear);
+    if (!isNaN(rY) && !isNaN(sY)) {
+      if (Math.abs(rY - sY) > 1) return false;
     }
   }
-  return Math.min(score, 1.5);
+  return true;
 }
 var cachedDomains = null;
 var domainCacheTime = 0;
@@ -196,19 +168,15 @@ var cachedVcDomain = "https://vcloud.zip";
 function refreshDomains() {
   return __async(this, null, function* () {
     const now = Date.now();
-    if (cachedDomains && now - domainCacheTime < DOMAIN_CACHE_TTL)
-      return cachedDomains;
+    if (cachedDomains && now - domainCacheTime < DOMAIN_CACHE_TTL) return cachedDomains;
     try {
       const data = yield fetchJson(DOMAINS_JSON_URL, {}, 8e3);
       if (data) {
         cachedDomains = data;
         domainCacheTime = now;
-        if (data.vegamovies)
-          baseUrl = data.vegamovies;
-        if (data.hubcloud)
-          cachedHubDomain = data.hubcloud;
-        if (data.vcloud)
-          cachedVcDomain = data.vcloud;
+        if (data.vegamovies) baseUrl = data.vegamovies;
+        if (data.hubcloud) cachedHubDomain = data.hubcloud;
+        if (data.vcloud) cachedVcDomain = data.vcloud;
         console.log("[" + PROVIDER_NAME + "] Domains updated: site=" + baseUrl + " hub=" + cachedHubDomain + " vc=" + cachedVcDomain);
       }
     } catch (e) {
@@ -261,10 +229,9 @@ function getTMDBInfo(id, type) {
 }
 function searchByTitle(query, year) {
   return __async(this, null, function* () {
-    if (!query)
-      return [];
+    if (!query) return [];
     const searchQuery = encodeURIComponent(query + (year ? " " + year : ""));
-    const url = baseUrl + "/search.php?q=" + searchQuery + "&page=1&per_page=50";
+    const url = baseUrl + "/search.php?q=" + searchQuery + "&page=1&per_page=15";
     console.log("[" + PROVIDER_NAME + '] Search: "' + query.substring(0, 60) + '" -> ' + url.substring(0, 120));
     const data = yield fetchJson(url);
     if (!data || !data.hits || data.hits.length === 0) {
@@ -284,57 +251,62 @@ function searchByTitle(query, year) {
     });
   });
 }
-function fetchPostContent(postId) {
+function fetchPostContent(postId, link) {
   return __async(this, null, function* () {
-    if (!postId)
-      return null;
+    if (!postId) return null;
     const apiUrl = baseUrl + "/wp-json/wp/v2/posts/" + postId;
-    console.log("[" + PROVIDER_NAME + "] WP-JSON: fetching post " + postId);
+    console.log("[" + PROVIDER_NAME + "] Fetching post content " + postId);
     try {
       const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(15e3) : null;
-      const res = yield fetch(apiUrl, {
-        headers: MOBILE_HEADERS,
-        signal: signal || void 0
-      });
-      if (!res || !res.ok) {
-        console.log("[" + PROVIDER_NAME + "] WP-JSON: HTTP " + (res ? res.status : "null"));
-        return null;
+      const res = yield fetch(apiUrl, { headers: MOBILE_HEADERS, signal: signal || void 0 });
+      if (res && res.ok) {
+        const text = yield res.text();
+        try {
+          const json = JSON.parse(text);
+          if (json && json.content && json.content.rendered) {
+            return {
+              title: (json.title && json.title.rendered || "").replace(/Download\s*/gi, "").trim(),
+              html: json.content.rendered
+            };
+          }
+        } catch (parseError) {
+          console.log("[" + PROVIDER_NAME + "] WP-JSON parse failed (likely 256KB truncation). Falling back to raw HTML.");
+        }
       }
-      const json = yield res.json();
-      if (!json || !json.content || !json.content.rendered) {
-        console.log("[" + PROVIDER_NAME + "] WP-JSON: no content.rendered in response");
-        return null;
-      }
-      const title = (json.title && json.title.rendered || "").replace(/Download\s*/gi, "").trim();
-      console.log("[" + PROVIDER_NAME + '] WP-JSON: "' + title.substring(0, 80) + '" (content=' + json.content.rendered.length + " bytes)");
-      return {
-        title,
-        html: json.content.rendered,
-        slug: json.slug || "",
-        link: json.link || ""
-      };
     } catch (e) {
-      console.error("[" + PROVIDER_NAME + "] WP-JSON error: " + e.message);
-      return null;
+      console.error("[" + PROVIDER_NAME + "] WP-JSON fetch error: " + e.message);
     }
+    try {
+      const fallbackUrl = link ? fixUrl(link) : baseUrl + "/?p=" + postId;
+      console.log("[" + PROVIDER_NAME + "] HTML Fallback fetching: " + fallbackUrl);
+      const htmlRes = yield fetchHtml(fallbackUrl, { headers: HEADERS });
+      if (htmlRes) {
+        const contentHtml = htmlRes(".entry-content").html() || htmlRes(".post-content").html();
+        if (contentHtml) {
+          return {
+            title: htmlRes("title").text().replace(/Download\s*/gi, "").trim(),
+            html: contentHtml
+          };
+        }
+      }
+    } catch (e) {
+      console.error("[" + PROVIDER_NAME + "] HTML fallback error: " + e.message);
+    }
+    return null;
   });
 }
 function extractNexdriveLinks(contentHtml) {
-  if (!contentHtml)
-    return [];
+  if (!contentHtml) return [];
   const links = [];
   const $ = cheerio.load(contentHtml);
   const seenUrls = /* @__PURE__ */ new Set();
-  $('a[href*="nexdrive"], a[href*="genxfm"]').each((i, el) => {
+  $('a[href*="nexdrive"], a[href*="genxfm"], a[href*="fastdl"]').each((i, el) => {
     try {
       const href = $(el).attr("href");
-      if (!href)
-        return;
+      if (!href) return;
       const linkText = ($(el).text() || "").trim();
-      if (EXCLUDED_BUTTONS.some((ex) => linkText.toLowerCase().includes(ex)))
-        return;
-      if (seenUrls.has(href))
-        return;
+      if (EXCLUDED_BUTTONS.some((ex) => linkText.toLowerCase().includes(ex))) return;
+      if (seenUrls.has(href)) return;
       seenUrls.add(href);
       let quality = "HD";
       const hrefPos = contentHtml.indexOf(href);
@@ -352,389 +324,173 @@ function extractNexdriveLinks(contentHtml) {
         }
         if (lastMatch) {
           quality = parseQuality(lastMatch);
-          if (!quality || quality === "HD")
-            quality = parseQuality(lastMatch.toUpperCase());
         }
         if (!quality || quality === "HD") {
           const headingQ = beforeHref.match(/<(?:h[1-6]|strong|b)[^>]*>[^<]*?(\d{3,4}p|4K|UHD)[^<]*?<\//i);
-          if (headingQ)
-            quality = parseQuality(headingQ[1]);
+          if (headingQ) quality = parseQuality(headingQ[1]);
         }
       }
       links.push({ href: fixUrl(href), quality: quality || "HD", label: linkText || "Download" });
     } catch (e) {
     }
   });
-  console.log("[" + PROVIDER_NAME + "] Content: found " + links.length + " nexdrive links (quality from backwards scan)");
-  if (links.length > 0) {
-    const qCounts = {};
-    links.forEach((l) => {
-      const q = l.quality || "HD";
-      qCounts[q] = (qCounts[q] || 0) + 1;
-    });
-    console.log("[" + PROVIDER_NAME + "]   Qualities: " + JSON.stringify(qCounts));
-  }
   return links;
 }
-function capLinksForEfficiency(links, maxTotal) {
-  maxTotal = maxTotal || 8;
-  if (!links || links.length <= maxTotal)
-    return links;
-  const hasNonHdQuality = links.some((l) => l.quality && l.quality !== "HD");
-  let cappedLinks = [];
-  if (hasNonHdQuality) {
-    const qualityPriority = ["2160p", "4K", "1440p", "1080p", "720p", "480p", "HD", "360p"];
-    const maxPerQuality = 2;
-    const filled = {};
-    let count = 0;
-    for (const q of qualityPriority) {
-      if (count >= maxTotal)
-        break;
-      let qCount = 0;
-      for (const link of links) {
-        if (count >= maxTotal)
-          break;
-        if ((link.quality || "HD") === q && qCount < maxPerQuality) {
-          if (q === "480p" && count > 0)
-            continue;
-          cappedLinks.push(link);
-          qCount++;
-          count++;
-        }
-      }
-    }
-    if (count < maxTotal) {
-      for (const link of links) {
-        if (count >= maxTotal)
-          break;
-        if (!cappedLinks.includes(link)) {
-          cappedLinks.push(link);
-          count++;
-        }
-      }
-    }
-  } else {
-    const step = Math.max(1, Math.floor(links.length / maxTotal));
-    for (let i = 0; i < maxTotal && i * step < links.length; i++) {
-      cappedLinks.push(links[i * step]);
-    }
-    if (cappedLinks.length < maxTotal) {
-      for (const link of links) {
-        if (cappedLinks.length >= maxTotal)
-          break;
-        if (!cappedLinks.includes(link))
-          cappedLinks.push(link);
-      }
-    }
-  }
-  const dropped = links.length - cappedLinks.length;
-  console.log("[" + PROVIDER_NAME + "] Capped " + links.length + " links -> " + cappedLinks.length + " (" + dropped + " dropped, saves ~" + dropped * 3 + " HTTP requests)");
-  return cappedLinks;
+function capLinksForEfficiency(links, maxTotal = 15) {
+  if (!links || links.length <= maxTotal) return links;
+  return links.slice(0, maxTotal);
 }
-function extractSeasonFromContent(contentHtml, targetSeason, targetEpisode) {
-  if (!contentHtml)
-    return contentHtml;
-  const headingTags = ["h1", "h2", "h3", "h4", "h5", "h6", "strong", "b", "em", "u", "span"];
-  const seasonTextRegex = /\b(?:Season|Saison|Staffel)\s+(\d+)\b/gi;
-  const positions = [];
+function extractSeasonFromContent(contentHtml, targetSeason) {
+  if (!contentHtml || targetSeason == null) return contentHtml;
+  const regex = new RegExp(`(<h[1-6][^>]*>|<strong[^>]*>).*?(?:Season|Saison|Staffel)\\s+0*${targetSeason}\\b(?!\\s*[-\u2013]).*?(?:</h[1-6]>|</strong>)`, "gi");
   let match;
-  while ((match = seasonTextRegex.exec(contentHtml)) !== null) {
-    const seasonNum = parseInt(match[1]);
-    const pos = match.index;
-    let openTagPos = -1;
-    let depth = 0;
-    for (let i2 = pos - 1; i2 >= Math.max(0, pos - 2e3); i2--) {
-      const ch = contentHtml[i2];
-      if (ch === ">") {
-        depth++;
-      } else if (ch === "<") {
-        if (depth === 0) {
-          if (contentHtml[i2 + 1] !== "/") {
-            openTagPos = i2;
-            break;
-          }
-        } else {
-          depth--;
-        }
-      }
-    }
-    if (openTagPos === -1)
-      continue;
-    const tagEnd = contentHtml.indexOf(">", openTagPos);
-    if (tagEnd === -1 || tagEnd >= pos)
-      continue;
-    const tagContent = contentHtml.substring(openTagPos + 1, tagEnd).trim().split(/\s+/)[0];
-    if (!tagContent)
-      continue;
-    const tagName = tagContent.toLowerCase();
-    if (headingTags.indexOf(tagName) === -1)
-      continue;
-    const voidElements = ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "source", "track", "wbr"];
-    if (voidElements.indexOf(tagName) !== -1)
-      continue;
-    const closeTag = "</" + tagName + ">";
-    const closeTagPos = contentHtml.indexOf(closeTag, Math.max(pos, tagEnd));
-    if (closeTagPos === -1)
-      continue;
-    const contentStart = closeTagPos + closeTag.length;
-    positions.push({
-      seasonNum,
-      tagName,
-      contentStart,
-      matchPos: pos
-    });
-  }
-  if (positions.length === 0) {
-    console.log("[" + PROVIDER_NAME + "] extractSeason: no heading season markers found, treating as pack");
-    return null;
-  }
-  positions.sort(function(a, b) {
-    return a.matchPos - b.matchPos;
-  });
-  var collapsed = [];
-  var i = 0;
-  while (i < positions.length) {
-    var j = i;
-    while (j + 1 < positions.length && positions[j + 1].seasonNum === positions[i].seasonNum) {
-      j++;
-    }
-    collapsed.push(positions[j]);
-    i = j + 1;
-  }
-  for (var idx = 0; idx < collapsed.length; idx++) {
-    if (collapsed[idx].seasonNum === targetSeason) {
-      var start = collapsed[idx].contentStart;
-      var end = idx + 1 < collapsed.length ? collapsed[idx + 1].matchPos : contentHtml.length;
-      var sectionContent = contentHtml.substring(start, end);
-      console.log("[" + PROVIDER_NAME + "] Season " + targetSeason + " section found (" + sectionContent.length + " chars, " + positions.length + " total)");
-      return sectionContent;
+  let bestPos = -1;
+  while ((match = regex.exec(contentHtml)) !== null) {
+    if (match[0].toLowerCase().includes("download") === false || match[0].toLowerCase().includes("[") || match[0].toLowerCase().includes("p")) {
+      bestPos = match.index;
+      break;
     }
   }
-  console.log("[" + PROVIDER_NAME + "] extractSeason: target season " + targetSeason + " not found among " + collapsed.length + " headings, treating as pack");
+  if (bestPos === -1) {
+    const fallbackRegex = new RegExp(`\\b(?:Season|Saison|Staffel)\\s+0*${targetSeason}\\b(?!\\s*[-\u2013])`, "i");
+    bestPos = contentHtml.search(fallbackRegex);
+    if (bestPos !== -1) {
+      let startTag = contentHtml.lastIndexOf("<h", bestPos);
+      if (startTag === -1) startTag = contentHtml.lastIndexOf("<strong", bestPos);
+      if (startTag !== -1) bestPos = startTag;
+    }
+  }
+  if (bestPos !== -1) {
+    const nextSeasonRegex = new RegExp(`(<h[1-6][^>]*>|<strong[^>]*>).*?(?:Season|Saison|Staffel)\\s+0*${targetSeason + 1}\\b(?!\\s*[-\u2013])`, "i");
+    let endMatchPos = contentHtml.substring(bestPos + 10).search(nextSeasonRegex);
+    const prevSeasonRegex = targetSeason > 1 ? new RegExp(`(<h[1-6][^>]*>|<strong[^>]*>).*?(?:Season|Saison|Staffel)\\s+0*${targetSeason - 1}\\b(?!\\s*[-\u2013])`, "i") : null;
+    let endMatchPosPrev = prevSeasonRegex ? contentHtml.substring(bestPos + 10).search(prevSeasonRegex) : -1;
+    let cutPos = contentHtml.length;
+    if (endMatchPos !== -1) cutPos = Math.min(cutPos, bestPos + 10 + endMatchPos);
+    if (endMatchPosPrev !== -1) cutPos = Math.min(cutPos, bestPos + 10 + endMatchPosPrev);
+    let recentPos = contentHtml.substring(bestPos + 10).search(/<h[1-6][^>]*>.*?(?:Recent|Related|Similar).*?<\/h[1-6]>/i);
+    if (recentPos !== -1) cutPos = Math.min(cutPos, bestPos + 10 + recentPos);
+    return contentHtml.substring(bestPos, cutPos);
+  }
   return null;
 }
-function extractSingleVc(vcUrl, referer, targetSeason, targetEpisode, isSeasonSpecific) {
+function extractSingleVc(vcUrl, referer, targetSeason, targetEpisode) {
   return __async(this, null, function* () {
     const streams = [];
     const lower = vcUrl.toLowerCase();
-    if (lower.includes("vcloud") || lower.includes("hubcloud") || lower.includes("nexdrive")) {
+    if (lower.includes("vcloud") || lower.includes("hubcloud") || lower.includes("nexdrive") || lower.includes("fastdl")) {
       const isHub = lower.includes("hubcloud");
       const latestBase = isHub ? getLatestHubDomain() : getLatestVcDomain();
       const curBase = getOrigin(vcUrl);
       let newUrl = vcUrl;
-      if (curBase !== latestBase) {
+      if (curBase !== latestBase && (vcUrl.includes("vcloud") || vcUrl.includes("hubcloud"))) {
         newUrl = vcUrl.replace(curBase, latestBase);
       }
-      console.log("[" + PROVIDER_NAME + "] V-Cloud: fetching " + newUrl.substring(0, 100));
       const html = yield fetchHtml(newUrl, {
-        headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": referer || baseUrl + "/", "Cookie": "xla=s4t" })
+        headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": referer || baseUrl + "/", "Cookie": "xla=s4t" }),
+        redirect: "manual"
       });
-      if (!html)
-        return streams;
+      if (!html) return streams;
       const rawHtml = html.html();
-      if ((targetSeason != null || targetEpisode != null) && isSeasonSpecific) {
-        const pageTitle = html("title").text() || "";
-        const seMatch = pageTitle.match(/[.\s_-]S(\d{1,2})E(\d{1,2})[.\s_-]/i);
+      const pageTitle = html("title").text() || "";
+      if (targetSeason != null || targetEpisode != null) {
+        const seMatch = pageTitle.match(/[.\s_\-](?:S|Season)\s*0*(\d{1,2})\s*(?:E|Ep|Episode)\s*0*(\d{1,2})[.\s_\-]/i);
         if (seMatch) {
           const vcSeason = parseInt(seMatch[1]);
           const vcEpisode = parseInt(seMatch[2]);
           if (targetSeason != null && vcSeason !== targetSeason) {
-            console.log("[" + PROVIDER_NAME + "] V-Cloud title season mismatch: title=" + pageTitle.substring(0, 60) + " target=S" + targetSeason + "E" + (targetEpisode || "?"));
+            console.log(`[${PROVIDER_NAME}] V-Cloud title mismatch: Title=${pageTitle.substring(0, 40)} Target=S${targetSeason}`);
             return streams;
           }
           if (targetEpisode != null && vcEpisode !== targetEpisode) {
-            console.log("[" + PROVIDER_NAME + "] V-Cloud title episode mismatch: title=" + pageTitle.substring(0, 60) + " target=S" + (targetSeason || "?") + "E" + targetEpisode);
+            console.log(`[${PROVIDER_NAME}] V-Cloud title mismatch: Title=${pageTitle.substring(0, 40)} Target=E${targetEpisode}`);
             return streams;
+          }
+        } else {
+          const sMatch = pageTitle.match(/[.\s_\-](?:S|Season)\s*0*(\d{1,2})[.\s_\-]/i);
+          if (sMatch && targetSeason != null) {
+            const vcSeason = parseInt(sMatch[1]);
+            if (vcSeason !== targetSeason) {
+              console.log(`[${PROVIDER_NAME}] V-Cloud pack mismatch: Title=${pageTitle.substring(0, 40)} Target=S${targetSeason}`);
+              return streams;
+            }
           }
         }
       }
       let bridgeUrl = "";
       const varMatch = rawHtml.match(/var\s+url\s*=\s*['"]([^'"]+)['"]/);
-      if (varMatch) {
-        bridgeUrl = varMatch[1];
-      }
+      if (varMatch) bridgeUrl = varMatch[1];
       if (!bridgeUrl) {
         const downloadHref = html("#download").attr("href") || html("a").filter((i, el) => {
           const href = html(el).attr("href") || "";
           return href.includes("hubcloud.php") || href.includes("token") || href.includes("dl");
         }).first().attr("href");
-        if (downloadHref) {
-          bridgeUrl = downloadHref.startsWith("http") ? downloadHref : getOrigin(newUrl) + "/" + downloadHref.replace(/^\//, "");
-        }
+        if (downloadHref) bridgeUrl = downloadHref.startsWith("http") ? downloadHref : getOrigin(newUrl) + "/" + downloadHref.replace(/^\//, "");
       }
-      if (!bridgeUrl) {
-        console.log("[" + PROVIDER_NAME + "] V-Cloud: no bridge URL found");
-        return streams;
-      }
-      if (bridgeUrl.indexOf("://") < 0)
-        bridgeUrl = getOrigin(newUrl) + bridgeUrl;
-      console.log("[" + PROVIDER_NAME + "] V-Cloud: bridge URL -> " + bridgeUrl.substring(0, 100));
+      if (!bridgeUrl) return streams;
+      if (bridgeUrl.indexOf("://") < 0) bridgeUrl = getOrigin(newUrl) + bridgeUrl;
       const bridgeHtml = yield fetchHtml(bridgeUrl, {
         headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": newUrl, "Cookie": "xla=s4t" })
       });
-      if (!bridgeHtml) {
-        console.log("[" + PROVIDER_NAME + "] V-Cloud: bridge page fetch failed (null)");
-        return streams;
-      }
+      if (!bridgeHtml) return streams;
       const bridgeRaw = bridgeHtml.html();
-      console.log("[" + PROVIDER_NAME + "] V-Cloud: bridge page size=" + bridgeRaw.length + " bytes");
       const headerText = bridgeHtml("div.card-header").text() || "";
       const quality = parseQuality(headerText) || "HD";
-      if (targetSeason != null && isSeasonSpecific) {
-        const sRegex = new RegExp("(?:s|season|staffel|saison)\\s*0*" + Number(targetSeason) + "(?![0-9])", "i");
-        const anySRegex = /(?:s|season|staffel|saison)\s*0*\d+/i;
-        if (anySRegex.test(headerText) && !sRegex.test(headerText)) {
-          console.log("[" + PROVIDER_NAME + "] Bridge wrong season: " + headerText.substring(0, 60));
-          return streams;
-        }
-      }
-      if (targetEpisode != null && isSeasonSpecific) {
-        const eRegex = new RegExp("(?:e|ep|episode)\\s*0*" + Number(targetEpisode) + "(?![0-9])", "i");
-        const anyERegex = /(?:e|ep|episode)\s*0*\d+/i;
-        if (anyERegex.test(headerText) && !eRegex.test(headerText)) {
-          console.log("[" + PROVIDER_NAME + "] Bridge wrong episode: " + headerText.substring(0, 60));
-          return streams;
-        }
-      }
       const serverTasks = [];
-      let totalLinks = 0;
       bridgeHtml("a.btn, a").each((i, el) => {
         try {
-          let href, text, lowerText;
-          try {
-            href = bridgeHtml(el).attr("href");
-          } catch (e) {
-            href = "";
-          }
-          try {
-            text = (bridgeHtml(el).text() || "").trim();
-          } catch (e) {
-            text = "";
-          }
-          try {
-            lowerText = (text || "").toLowerCase();
-          } catch (e) {
-            lowerText = "";
-          }
-          totalLinks++;
-          if (i < 5 && href) {
-            try {
-              console.log("[" + PROVIDER_NAME + "] V-Cloud: link[" + i + "] href=" + (href || "").substring(0, 60) + " text=" + (text || "").substring(0, 40));
-            } catch (e) {
-            }
-          }
-          if (!href || href === "#")
+          let href = bridgeHtml(el).attr("href") || "";
+          let text = (bridgeHtml(el).text() || "").trim();
+          let lowerText = text.toLowerCase();
+          if (!href || href === "#") return;
+          if (href.toLowerCase().includes(".zip")) return;
+          if (lowerText.includes("10gbps") || lowerText.includes("gdflix") || lowerText.includes("dropgalaxy") || lowerText.includes("telegram")) {
             return;
-          if (href.toLowerCase().includes(".zip"))
-            return;
-          if (lowerText && lowerText.includes("fsl")) {
+          }
+          if (lowerText.includes("fsl")) {
             const synced = href + "?s=" + (1 + (/* @__PURE__ */ new Date()).getMinutes());
             serverTasks.push(() => {
-              streams.push(makeStream("FSL | " + quality, (text || "") + " [" + (headerText || "") + "]", synced, quality, {
-                "Referer": bridgeUrl
-              }));
-              return [];
+              streams.push(makeStream("FSL | " + quality, text + " [" + headerText + "]", synced, quality, { "Referer": bridgeUrl }));
             });
           }
-          if (href.includes("pixeldra") || lowerText && lowerText.includes("pixel")) {
-            let pxlUrl = "";
-            try {
-              const pxlMatch = bridgeRaw.match(/var\s+pxl\s*=\s*["']([^"']+)["']/);
-              pxlUrl = pxlMatch ? pxlMatch[1] : href;
-            } catch (e) {
-              pxlUrl = href;
-            }
-            if (pxlUrl) {
-              let finalUrl = pxlUrl;
-              try {
-                if (pxlUrl.toLowerCase().includes("download")) {
-                  finalUrl = pxlUrl;
-                } else {
-                  const seg = pxlUrl.split("/").pop();
-                  const base = getOrigin(pxlUrl);
-                  finalUrl = base + "/api/file/" + seg + "?download";
-                }
-              } catch (e) {
-                finalUrl = pxlUrl;
-              }
-              serverTasks.push(() => {
-                streams.push(makeStream("PixelDrain | " + quality, (text || "") + " [" + (headerText || "") + "]", finalUrl, quality, {
-                  "Referer": bridgeUrl
-                }));
-                return [];
-              });
-            }
+          const isFastCdn = href.includes("r2.dev") || href.includes("gofile") || href.includes("diskcdn") || href.includes("lotuscdn") || href.includes("workers.dev");
+          if (lowerText.includes("download") || isFastCdn) {
+            serverTasks.push(() => {
+              streams.push(makeStream("Download | " + quality, text + " [" + headerText + "]", href, quality, { "Referer": bridgeUrl }));
+            });
           }
-          try {
-            const isFastCdn = href.includes("r2.dev") || href.includes("gofile") || href.includes("diskcdn") || href.includes("lotuscdn") || href.includes("workers.dev");
-            if ((lowerText && lowerText.includes("download") || isFastCdn) && (!lowerText || !lowerText.includes("telegram") && !lowerText.includes("zip") && !lowerText.includes("10gbps") && !lowerText.includes("buzz")) && !href.includes("gpdl2") && !href.includes("hubcloud.foo/tg")) {
-              serverTasks.push(() => {
-                streams.push(makeStream("Download | " + quality, (text || "") + " [" + (headerText || "") + "]", href, quality, {
-                  "Referer": bridgeUrl
-                }));
-                return [];
-              });
-            }
-          } catch (e) {
-          }
-        } catch (eBridgeLink) {
-          console.log("[" + PROVIDER_NAME + "] V-Cloud: link[" + i + "] parse error: " + eBridgeLink.message);
+        } catch (e) {
         }
       });
-      console.log("[" + PROVIDER_NAME + "] V-Cloud: total link elements=" + totalLinks + " matching tasks=" + serverTasks.length);
       if (serverTasks.length === 0) {
         const fslHref = bridgeHtml("#fsl").attr("href");
         if (fslHref) {
-          console.log("[" + PROVIDER_NAME + "] V-Cloud: #fsl fallback found -> " + fslHref.substring(0, 80));
           const synced = fslHref + "?s=" + (1 + (/* @__PURE__ */ new Date()).getMinutes());
           serverTasks.push(() => {
-            streams.push(makeStream("FSL | " + quality, "FSL Server [" + headerText + "]", synced, quality, {
-              "Referer": bridgeUrl
-            }));
-            return [];
+            streams.push(makeStream("FSL | " + quality, "FSL Server [" + headerText + "]", synced, quality, { "Referer": bridgeUrl }));
           });
-        } else {
-          console.log("[" + PROVIDER_NAME + "] V-Cloud: no matching server links, bridge preview=" + bridgeRaw.substring(500, 800).replace(/\n/g, " "));
         }
       }
-      if (serverTasks.length > 0) {
-        yield Promise.all(serverTasks.map((fn) => __async(this, null, function* () {
-          try {
-            return yield fn();
-          } catch (e) {
-            return [];
-          }
-        })));
-      }
-      console.log("[" + PROVIDER_NAME + "] V-Cloud: found " + streams.length + " streams");
+      serverTasks.forEach((fn) => fn());
     }
     return streams;
   });
 }
-function loadStreamsFromUrl(url, label, quality, referer, targetSeason, targetEpisode, isSeasonSpecific) {
+function loadStreamsFromUrl(url, label, quality, referer, targetSeason, targetEpisode) {
   return __async(this, null, function* () {
     const lower = url.toLowerCase();
     if (lower.includes("vcloud") || lower.includes("hubcloud")) {
-      return yield extractSingleVc(url, referer || url, targetSeason, targetEpisode, isSeasonSpecific);
+      return yield extractSingleVc(url, referer || url, targetSeason, targetEpisode);
     }
-    if (lower.includes("nexdrive") || lower.includes("genxfm")) {
-      const $ = yield fetchHtml(url, { headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": referer || baseUrl + "/" }) });
-      if (!$)
-        return [];
+    if (lower.includes("nexdrive") || lower.includes("genxfm") || lower.includes("fastdl")) {
+      const $ = yield fetchHtml(url, { headers: __spreadProps(__spreadValues({}, HEADERS), { "Referer": referer || baseUrl + "/" }), redirect: "manual" });
+      if (!$) return [];
       const tasks = [];
       $('a[href*="vcloud"], a[href*="hubcloud"]').each((i, el) => {
         const href = $(el).attr("href");
-        if (href)
-          tasks.push(() => extractSingleVc(fixUrl(href), url, targetSeason, targetEpisode, isSeasonSpecific));
+        if (href) tasks.push(() => extractSingleVc(fixUrl(href), url, targetSeason, targetEpisode));
       });
-      if (tasks.length === 0) {
-        $('a[href*="fastdl"]').each((i, el) => {
-          const href = $(el).attr("href");
-          if (href)
-            tasks.push(() => extractSingleVc(fixUrl(href), url, targetSeason, targetEpisode, isSeasonSpecific));
-        });
-      }
-      const results = yield Promise.all(tasks.map((fn) => (() => __async(this, null, function* () {
+      const results = yield Promise.all(tasks.map((fn) => (() => __async(null, null, function* () {
         try {
           return yield fn();
         } catch (e) {
@@ -743,59 +499,40 @@ function loadStreamsFromUrl(url, label, quality, referer, targetSeason, targetEp
       }))()));
       const streams = [];
       results.forEach((r) => {
-        if (Array.isArray(r))
-          r.forEach((s) => {
-            if (s && s.url)
-              streams.push(s);
-          });
+        if (Array.isArray(r)) r.forEach((s) => {
+          if (s && s.url) streams.push(s);
+        });
       });
       return streams;
     }
     return [];
   });
 }
-function extractFromPost(postId, label, isTv, targetSeason, targetEpisode) {
+function extractFromPost(post, label, isTv, targetSeason, targetEpisode) {
   return __async(this, null, function* () {
     try {
-      const post = yield fetchPostContent(postId);
-      if (!post || !post.html) {
-        console.log("[" + PROVIDER_NAME + "] extractPost: failed to fetch post " + postId);
-        return [];
-      }
       let contentHtml = post.html;
       let seasonLabel = "";
-      let isSeasonSpecific = false;
-      if (isTv && targetSeason) {
-        const filtered = extractSeasonFromContent(contentHtml, targetSeason, targetEpisode);
+      if (isTv && targetSeason != null) {
+        const filtered = extractSeasonFromContent(contentHtml, targetSeason);
         if (filtered) {
           contentHtml = filtered;
-          isSeasonSpecific = true;
-          seasonLabel = " S" + targetSeason;
-          if (targetEpisode)
-            seasonLabel += "E" + targetEpisode;
-        } else {
-          isSeasonSpecific = false;
-          seasonLabel = " S" + targetSeason;
-          if (targetEpisode)
-            seasonLabel += "E" + targetEpisode;
-          console.log("[" + PROVIDER_NAME + "] extractPost: no season sections, treating as pack" + seasonLabel);
         }
+        seasonLabel = " S" + targetSeason;
+        if (targetEpisode) seasonLabel += "E" + targetEpisode;
       }
       const links = extractNexdriveLinks(contentHtml);
       const efficientLinks = capLinksForEfficiency(links);
-      if (efficientLinks.length === 0) {
-        console.log("[" + PROVIDER_NAME + "] extractPost: no nexdrive links found in content");
-        return [];
-      }
+      if (efficientLinks.length === 0) return [];
       const streams = [];
       const tasks = [];
       for (const link of efficientLinks) {
         const quality = link.quality || "HD";
         const displayLabel = label + seasonLabel + " [" + quality + "]";
-        tasks.push(() => loadStreamsFromUrl(link.href, displayLabel, quality, baseUrl + "/", targetSeason, targetEpisode, isSeasonSpecific));
+        tasks.push(() => loadStreamsFromUrl(link.href, displayLabel, quality, baseUrl + "/", targetSeason, targetEpisode));
       }
-      console.log("[" + PROVIDER_NAME + "] extractPost: resolving " + tasks.length + " nexdrive links (capped from " + links.length + ")...");
-      const results = yield Promise.all(tasks.map((fn) => (() => __async(this, null, function* () {
+      console.log(`[${PROVIDER_NAME}] Resolving ${tasks.length} nexdrive links for post...`);
+      const results = yield Promise.all(tasks.map((fn) => (() => __async(null, null, function* () {
         try {
           return yield fn();
         } catch (e) {
@@ -803,13 +540,10 @@ function extractFromPost(postId, label, isTv, targetSeason, targetEpisode) {
         }
       }))()));
       results.forEach((r) => {
-        if (Array.isArray(r))
-          r.forEach((s) => {
-            if (s && s.url)
-              streams.push(s);
-          });
+        if (Array.isArray(r)) r.forEach((s) => {
+          if (s && s.url) streams.push(s);
+        });
       });
-      console.log("[" + PROVIDER_NAME + "] extractPost: " + streams.length + " streams from " + links.length + " links");
       return streams;
     } catch (e) {
       console.error("[" + PROVIDER_NAME + "] extractPost Fatal: " + e.message);
@@ -820,81 +554,57 @@ function extractFromPost(postId, label, isTv, targetSeason, targetEpisode) {
 function getStreams(tmdbId, mediaType, season, episode) {
   return __async(this, null, function* () {
     try {
-      console.log("[" + PROVIDER_NAME + "] Request: ID=" + tmdbId + " Type=" + mediaType + " S=" + season + " E=" + episode);
+      console.log(`[${PROVIDER_NAME}] Request: ID=${tmdbId} Type=${mediaType} S=${season} E=${episode}`);
       yield refreshDomains();
       const isTv = mediaType === "tv" || mediaType === "series";
       const media = yield getTMDBInfo(tmdbId, mediaType);
       let imdbId = media.imdbId;
       let mediaTitle = media.title;
       let mediaYear = media.year;
-      console.log("[" + PROVIDER_NAME + '] Resolved: "' + mediaTitle + '" (' + (mediaYear || "N/A") + ") imdb=" + (imdbId || "none"));
       if ((!imdbId || !imdbId.startsWith("tt")) && String(tmdbId).startsWith("tt")) {
         imdbId = String(tmdbId);
-        console.log("[" + PROVIDER_NAME + "] Using raw phone IMDB ID: " + imdbId);
       }
-      let query = mediaTitle;
-      const isRawNumericTitle = /^\d+$/.test(mediaTitle);
-      if (isRawNumericTitle) {
-        if (imdbId && imdbId.startsWith("tt")) {
-          query = imdbId;
-          console.log("[" + PROVIDER_NAME + "] TMDB failed, using imdb ID as query: " + imdbId);
-        }
-      } else if (isTv && season != null) {
-        query += " season " + Number(season);
-      } else if (mediaYear) {
-        query += " " + mediaYear;
-      }
-      let searchResults = yield searchByTitle(query, mediaYear);
-      if (searchResults.length === 0 && isTv && season != null) {
-        console.log("[" + PROVIDER_NAME + "] No results with season query, trying title alone...");
-        searchResults = yield searchByTitle(mediaTitle, mediaYear);
+      let searchResults = [];
+      if (imdbId && imdbId.startsWith("tt")) {
+        console.log(`[${PROVIDER_NAME}] Searching by exact IMDb ID: ${imdbId}`);
+        searchResults = yield searchByTitle(imdbId, null);
       }
       if (searchResults.length === 0) {
-        console.log("[" + PROVIDER_NAME + "] No search results found");
-        return [];
+        let query = mediaTitle;
+        if (isTv && season != null) query += " season " + Number(season);
+        else if (mediaYear) query += " " + mediaYear;
+        console.log(`[${PROVIDER_NAME}] Falling back to title search: ${query}`);
+        searchResults = yield searchByTitle(query, mediaYear);
+        if (searchResults.length === 0 && isTv && season != null) {
+          searchResults = yield searchByTitle(mediaTitle, mediaYear);
+        }
       }
+      if (searchResults.length === 0) return [];
       let bestMatch = null;
-      let bestScore = 0;
       const targetImdb = imdbId && imdbId.startsWith("tt") ? imdbId : null;
       for (const r of searchResults) {
         if (targetImdb && r.imdbId === targetImdb) {
           const sMatch = !isTv || !season || new RegExp("(?:s|season|staffel|saison)\\s*0*" + Number(season) + "\\b", "i").test(r.title);
           if (sMatch) {
             bestMatch = r;
-            bestScore = 2;
-            console.log("[" + PROVIDER_NAME + '] IMDB exact + season match: "' + r.title.substring(0, 60) + '"');
             break;
           }
         }
-        const score = similarity(mediaTitle, r.title, mediaYear, isTv && season != null ? Number(season) : null);
-        const finalScore = targetImdb && r.imdbId === targetImdb ? score + 0.3 : score;
-        if (finalScore > bestScore && finalScore > 0.4) {
-          bestScore = finalScore;
-          bestMatch = r;
-        }
-      }
-      if (!bestMatch && searchResults.length > 0) {
-        const firstWord = mediaTitle.toLowerCase().split(" ")[0];
-        if (firstWord && searchResults[0].title.toLowerCase().includes(firstWord)) {
-          bestMatch = searchResults[0];
-          console.log("[" + PROVIDER_NAME + '] Fallback: first word match -> "' + bestMatch.title.substring(0, 60) + '"');
+        if (!bestMatch) {
+          if (isStrictMatch(mediaTitle, mediaYear, r.title, r.year)) {
+            bestMatch = r;
+          }
         }
       }
       if (!bestMatch || !bestMatch.postId) {
-        console.log("[" + PROVIDER_NAME + "] No confident match (score=" + bestScore + ")");
+        console.log(`[${PROVIDER_NAME}] No strict match found. Rejecting to prevent serving wrong media.`);
         return [];
       }
-      console.log("[" + PROVIDER_NAME + '] Matched: "' + bestMatch.title.substring(0, 80) + '" (id=' + bestMatch.postId + ", score=" + bestScore + ")");
-      const streams = yield extractFromPost(
-        bestMatch.postId,
-        mediaTitle,
-        isTv,
-        season != null ? Number(season) : null,
-        episode != null ? Number(episode) : null
-      );
-      const result = dedupe(streams);
-      console.log("[" + PROVIDER_NAME + "] Total unique streams: " + result.length);
-      return result;
+      console.log(`[${PROVIDER_NAME}] Matched: "${bestMatch.title}"`);
+      const postData = yield fetchPostContent(bestMatch.postId, bestMatch.permalink);
+      if (!postData) return [];
+      const streams = yield extractFromPost(postData, mediaTitle, isTv, season != null ? Number(season) : null, episode != null ? Number(episode) : null);
+      return dedupe(streams);
     } catch (e) {
       console.error("[" + PROVIDER_NAME + "] Fatal: " + e.message);
       return [];
