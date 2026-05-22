@@ -648,7 +648,10 @@
       "description": "MoviesDrive - Movies and TV shows with multiple streaming servers",
       "version": "3.0.0",
       "author": "PirateZoro9",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/moviesdrive.js",
       "enabled": true,
       "formats": [
