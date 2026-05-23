@@ -14,7 +14,7 @@
 //   - Vidmoly : fallback vidmoly.me + désobfuscateur p,a,c,k,e,d
 // ============================================================
 
-var AS_FALLBACK = 'si';
+var AS_FALLBACK = 'to';
 var AS_BASE  = 'https://anime-sama.' + AS_FALLBACK;
 var AS_REF   = AS_BASE + '/';
 var UA       = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
